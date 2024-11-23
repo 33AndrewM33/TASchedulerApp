@@ -26,4 +26,6 @@ urlpatterns = [
     path('home/managecourse/', lambda request: None, name='manage_course'),
     path('home/managesection/', lambda request: None, name='manage_section'),
     path('home/managesection/create/', lambda request: None, name='create_section'),
+    path('home/managecourse/create/', views.course_create, name='course-create'),  # Added course creation URL
+    
 ]

@@ -1,7 +1,8 @@
 from django.db import IntegrityError
 from django.forms import ValidationError
-from django.test import TestCase
-from TAScheduler.models import Course, Section, User
+from django.test import Client, TestCase
+from django.urls import reverse
+from TAScheduler.models import Administrator, Course, Section, User
 from django.core.exceptions import PermissionDenied
 from django.db.models.deletion import ProtectedError
 
@@ -18,10 +19,10 @@ class CourseModelTestCase(TestCase):
             "modality": "In-person",
         }
 
+    'Unit Tests'
+
     # Create Course Tests #
     
-    
-
     def test_create_course(self):
         # Create a course instance
         course = Course.objects.create(**self.course_data)
@@ -199,9 +200,6 @@ class CourseModelTestCase(TestCase):
         # Ensure no courses remain in the database
         self.assertEqual(Course.objects.count(), 0, "No courses should remain in the database.")
 
-
-
-
     '''
     def test_remove_course_authorization(self):
         # Create a course
@@ -268,3 +266,63 @@ class CourseModelTestCase(TestCase):
     def test_remove_case_insensitive_no_match(self):
         deleted_rows, _ = Course.delete_case_insensitive("MATH101")
         self.assertEqual(deleted_rows, 0, "No course should be deleted for a non-existent course_id.")
+        
+        
+        
+        
+        
+        
+        'Acceptance Tests'
+        
+class CourseCreationLoginRequiredTest(TestCase):
+
+    def setUp(self):
+        # Create the test user with a hashed password
+        self.user = User.objects.create_user(
+            email_address="admin@example.com",  # Use email_address as the unique identifier
+            password="adminpassword",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True  # Ensures the user has admin privileges
+        )
+
+        # Log in using the correct credentials
+        logged_in = self.client.login(email_address="admin@example.com", password="adminpassword")
+        print(f"Logged in: {logged_in}")  # Debug to confirm login success
+
+        # Set up the URL for course creation
+        self.course_create_url = reverse('course-create')
+
+    def test_redirect_if_not_logged_in(self):
+        """
+        Ensure that unauthenticated users are redirected to the login page when accessing the course creation page.
+        """
+        response = self.client.get(self.course_create_url)
+        self.assertRedirects(
+            response, f"{reverse('login')}?next={self.course_create_url}"
+        )
+
+    def test_access_if_logged_in(self):
+        # Log in the test user
+        logged_in = self.client.login(username="testuser", password="testpassword")
+        print(f"Logged in: {logged_in}")  # Debugging: Confirm login success
+        
+        # Request the course creation page
+        response = self.client.get(reverse('course-create'))
+        
+        # Debugging: Check the response status code
+        print(f"Response Status Code: {response.status_code}")
+        
+        # Debugging: Check if there's a redirect
+        if response.status_code == 302:
+            print(f"Redirect Location: {response['Location']}")  # Debugging: Where it redirects to
+        
+        # Debugging: Check if the user is authenticated in the session
+        user_id = self.client.session.get('_auth_user_id')
+        print(f"Authenticated User ID: {user_id}")  # Should print the user's ID
+        
+        # Debugging: Ensure the correct URL path is requested
+        print(f"Requested Path: {response.request['PATH_INFO']}")
+        
+        # Assert the response status code
+        self.assertEqual(response.status_code, 200, "Authenticated user should be able to access the course creation page.")
