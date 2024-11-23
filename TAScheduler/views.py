@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from TAScheduler.models import Course
 
 def custom_login(request):
+    if request.user.is_authenticated:
+        return redirect('/home/')
     error = None
     if request.method == "POST":
         username = request.POST.get("username")
@@ -12,7 +14,7 @@ def custom_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/home/manageaccount/')  # Redirect to a placeholder after successful login
+            return redirect('/home/')  # Redirect to a placeholder after successful login
         else:
             error = "Invalid username or password"
     return render(request, "login.html", {"error": error})
