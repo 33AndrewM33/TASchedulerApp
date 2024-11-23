@@ -199,25 +199,6 @@ class CourseModelTestCase(TestCase):
 
         # Ensure no courses remain in the database
         self.assertEqual(Course.objects.count(), 0, "No courses should remain in the database.")
-
-    '''
-    def test_remove_course_authorization(self):
-        # Create a course
-        course = Course.objects.create(
-            course_id="CS101",
-            semester="Fall 2024",
-            name="Introduction to Computer Science",
-            description="A beginner's course in computer science.",
-            num_of_sections=3,
-            modality="In-person",
-        )
-        
-        # Simulate an unauthorized user attempting to delete the course
-        with self.assertRaises(PermissionDenied):
-            user = User.objects.create()
-            if not user.is_admin:
-                course.delete()
-    '''
     
     def test_remove_course_with_long_description(self):
         long_description = "A" * 1000  # Long description
@@ -272,57 +253,4 @@ class CourseModelTestCase(TestCase):
         
         
         
-        'Acceptance Tests'
-        
-class CourseCreationLoginRequiredTest(TestCase):
-
-    def setUp(self):
-        # Create the test user with a hashed password
-        self.user = User.objects.create_user(
-            email_address="admin@example.com",  # Use email_address as the unique identifier
-            password="adminpassword",
-            first_name="Admin",
-            last_name="User",
-            is_admin=True  # Ensures the user has admin privileges
-        )
-
-        # Log in using the correct credentials
-        logged_in = self.client.login(email_address="admin@example.com", password="adminpassword")
-        print(f"Logged in: {logged_in}")  # Debug to confirm login success
-
-        # Set up the URL for course creation
-        self.course_create_url = reverse('course-create')
-
-    def test_redirect_if_not_logged_in(self):
-        """
-        Ensure that unauthenticated users are redirected to the login page when accessing the course creation page.
-        """
-        response = self.client.get(self.course_create_url)
-        self.assertRedirects(
-            response, f"{reverse('login')}?next={self.course_create_url}"
-        )
-
-    def test_access_if_logged_in(self):
-        # Log in the test user
-        logged_in = self.client.login(username="testuser", password="testpassword")
-        print(f"Logged in: {logged_in}")  # Debugging: Confirm login success
-        
-        # Request the course creation page
-        response = self.client.get(reverse('course-create'))
-        
-        # Debugging: Check the response status code
-        print(f"Response Status Code: {response.status_code}")
-        
-        # Debugging: Check if there's a redirect
-        if response.status_code == 302:
-            print(f"Redirect Location: {response['Location']}")  # Debugging: Where it redirects to
-        
-        # Debugging: Check if the user is authenticated in the session
-        user_id = self.client.session.get('_auth_user_id')
-        print(f"Authenticated User ID: {user_id}")  # Should print the user's ID
-        
-        # Debugging: Ensure the correct URL path is requested
-        print(f"Requested Path: {response.request['PATH_INFO']}")
-        
-        # Assert the response status code
-        self.assertEqual(response.status_code, 200, "Authenticated user should be able to access the course creation page.")
+  

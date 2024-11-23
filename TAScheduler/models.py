@@ -1,4 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import BaseUserManager
 from django.db import models
 
 
@@ -16,6 +17,8 @@ class User(models.Model):
     is_admin = models.BooleanField(default=False)
     is_instructor = models.BooleanField(default=False)
     is_ta = models.BooleanField(default=False)
+    
+    
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"
@@ -118,3 +121,25 @@ class Administrator(models.Model):
 
     def __str__(self):
         return f"{self.user} - Administrator"
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email_address, password=None, **extra_fields):
+        """Create and return a regular user with the given email and password."""
+        if not email_address:
+            raise ValueError("The Email Address field must be set")
+        email_address = self.normalize_email(email_address)
+        user = self.model(email_address=email_address, **extra_fields)
+        user.set_password(password)  # Hash the password
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email_address, password=None, **extra_fields):
+        """Create and return a superuser with the given email and password."""
+        extra_fields.setdefault('is_admin', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if not extra_fields.get('is_admin'):
+            raise ValueError("Superuser must have is_admin=True.")
+        return self.create_user(email_address, password, **extra_fields)
