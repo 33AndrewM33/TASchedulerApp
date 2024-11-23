@@ -16,10 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.contrib.auth import views as auth_views
+from TAScheduler import views  # Import your custom views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('', views.custom_login, name='login'),  # Root path for login page
+    path('logout/', views.custom_logout, name='logout'),  # Optional custom logout
+    path('home/manageaccount/', lambda request: None, name='manage_account'),
+    path('home/managecourse/', lambda request: None, name='manage_course'),
+    path('home/managesection/', lambda request: None, name='manage_section'),
+    path('home/managesection/create/', lambda request: None, name='create_section'),
 ]
