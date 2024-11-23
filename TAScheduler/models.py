@@ -63,9 +63,15 @@ class Course(models.Model):
     description = models.TextField()
     num_of_sections = models.IntegerField()
     modality = models.CharField(max_length=50, choices=[("Online", "Online"), ("In-person", "In-person")])
+    
 
     def __str__(self):
         return f"{self.course_id}: {self.name}"
+    
+    @classmethod
+    def delete_case_insensitive(cls, course_id):
+        return cls.objects.filter(course_id__iexact=course_id).delete()
+
 
 
 class Section(models.Model):
