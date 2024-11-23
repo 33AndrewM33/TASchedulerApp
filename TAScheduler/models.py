@@ -3,12 +3,14 @@ from django.db import models
 
 
 class User(models.Model):
+    username=models.CharField(max_length=50, unique=True)
     email_address = models.EmailField(unique=True, max_length=90)  # Email validation and unique constraint
     password = models.CharField(max_length=128)  # Supports hashed passwords
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     home_address = models.CharField(max_length=90, blank=True)  # Allow optional fields
     phone_number = models.CharField(max_length=15, blank=True)
+
 
     # User roles
     is_admin = models.BooleanField(default=False)

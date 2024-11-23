@@ -8,7 +8,7 @@
 /* Body and Background */
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #007bff, #0056b3);
+    background: linear-gradient(135deg, #ffffff, #0056b3, #350909);
     color: #fff;
     display: flex;
     justify-content: center;
@@ -19,7 +19,8 @@ body {
 
 /* Form Container */
 form {
-    background-color: #ffffff;
+    display: block;
+    background-color: transparent;
     color: #333;
     padding: 30px;
     border-radius: 10px;
@@ -107,6 +108,11 @@ a:hover {
     font-size: 14px;
     font-weight: bold;
 }
+
+.pdd{
+    color:red;
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
