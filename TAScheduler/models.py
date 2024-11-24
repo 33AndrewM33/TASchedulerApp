@@ -4,6 +4,7 @@ from django.db import models
 
 
 class User(models.Model):
+    
     username=models.CharField(max_length=50, unique=True)
     email_address = models.EmailField(unique=True, max_length=90)  # Email validation and unique constraint
     password = models.CharField(max_length=128)  # Supports hashed passwords
@@ -68,7 +69,13 @@ class Course(models.Model):
     description = models.TextField()
     num_of_sections = models.IntegerField()
     modality = models.CharField(max_length=50, choices=[("Online", "Online"), ("In-person", "In-person")])
-    
+    instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,  # If the instructor is deleted, set this field to NULL
+        null=True,
+        blank=True,
+        related_name="courses"  # Enables reverse lookup: instructor.courses.all()
+    )
 
     def __str__(self):
         return f"{self.course_id}: {self.name}"
@@ -78,6 +85,14 @@ class Course(models.Model):
         return cls.objects.filter(course_id__iexact=course_id).delete()
 
 
+    def edit_Course(self, **kwargs):
+        """Update course details and save changes."""
+        for field, value in kwargs.items():
+            if hasattr(self, field):  # Ensure the field exists in the model
+                setattr(self, field, value)  # Update the field with the new value
+            else:
+                raise ValueError(f"Invalid field '{field}' for Course model.")
+        self.save()
 
 class Section(models.Model):
     section_id = models.IntegerField()
@@ -121,25 +136,3 @@ class Administrator(models.Model):
 
     def __str__(self):
         return f"{self.user} - Administrator"
-
-
-class UserManager(BaseUserManager):
-    def create_user(self, email_address, password=None, **extra_fields):
-        """Create and return a regular user with the given email and password."""
-        if not email_address:
-            raise ValueError("The Email Address field must be set")
-        email_address = self.normalize_email(email_address)
-        user = self.model(email_address=email_address, **extra_fields)
-        user.set_password(password)  # Hash the password
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email_address, password=None, **extra_fields):
-        """Create and return a superuser with the given email and password."""
-        extra_fields.setdefault('is_admin', True)
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        if not extra_fields.get('is_admin'):
-            raise ValueError("Superuser must have is_admin=True.")
-        return self.create_user(email_address, password, **extra_fields)
