@@ -6,6 +6,7 @@ class ModelsTestCase(TestCase):
     def setUp(self):
         # Create User
         self.user1 = User.objects.create(
+            username="ta_user",
             email_address="ta@example.com",
             password="password123",
             first_name="Jane",
@@ -13,6 +14,7 @@ class ModelsTestCase(TestCase):
             phone_number="1234567890"
         )
         self.user2 = User.objects.create(
+            username="instructor_user",
             email_address="instructor@example.com",
             password="password123",
             first_name="John",
