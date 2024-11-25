@@ -16,6 +16,19 @@ class CourseCreationTest(TestCase):
             "num_of_sections": 3,
             "modality": "In-person",
         }
+        
+    def test_course_with_invalid_sections_at_creation(self):
+        course = Course(
+            course_id="CS202",
+            semester="Fall 2024",
+            name="Invalid Course",
+            description="This course has invalid sections.",
+            num_of_sections=-3,  # Invalid
+            modality="Online"
+        )
+        with self.assertRaises(ValidationError) as context:
+            course.full_clean()  # Triggers field validation
+        self.assertIn("Ensure this value is greater than or equal to 0.", str(context.exception))
 
     def test_create_course(self):
         course = Course.objects.create(**self.course_data)
@@ -67,8 +80,6 @@ class CourseCreationTest(TestCase):
         course = Course.objects.get(course_id="cs101".upper())
         self.assertEqual(course.name, "Introduction to Computer Science")
 
-
-
 class CourseEditingTest(TestCase):
     def setUp(self):
         instructor_user = User.objects.create(
@@ -91,6 +102,12 @@ class CourseEditingTest(TestCase):
             modality="In-person",
             instructor=self.instructor,
         )
+
+
+    def test_edit_course_with_negative_sections(self):
+        with self.assertRaises(ValueError) as context:
+            self.course.edit_Course(num_of_sections=-5)
+        self.assertEqual(str(context.exception), "Number of sections cannot be negative.")
 
     def test_edit_course_id(self):
         self.course.edit_Course(course_id="CS105")
@@ -180,7 +197,14 @@ class CourseEditingTest(TestCase):
         self.assertEqual(self.course.instructor.user.last_name, "Undertaker")
 
 
+            
+    def test_edit_course_with_empty_values(self):
+        with self.assertRaises(ValueError):  # Adjust based on how edit_Course handles validation
+            self.course.edit_Course(name="")
 
+    def test_edit_course_with_negative_sections(self):
+        with self.assertRaises(ValueError):  # Adjust if ValueError is not raised
+            self.course.edit_Course(num_of_sections=-1)
 
 class CourseRemovalTest(TestCase):
     def test_remove_course_from_database(self):
@@ -267,7 +291,6 @@ class CourseRemovalTest(TestCase):
         deleted_rows, _ = Course.delete_case_insensitive("MATH101")
         self.assertEqual(deleted_rows, 0)
 
-
 class CourseDatabaseTest(TestCase):
     def setUp(self):
         self.course_data = {
@@ -290,3 +313,69 @@ class CourseDatabaseTest(TestCase):
         saved_course = Course.objects.get(course_id="CS101")
         self.assertEqual(saved_course.name, self.course_data["name"])
         self.assertEqual(Course.objects.count(), 1)
+
+class CourseCreatePermissionTest(TestCase):
+    def setUp(self):
+        # Admin user
+# Example for setting up admin user
+        self.admin_user = User.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("adminpassword")  # Hash the password
+        self.admin_user.save()
+
+
+        # Instructor user
+        self.instructor_user = User.objects.create(
+            username="instructor_user",
+            email_address="instructor@example.com",
+            password="instructorpassword",
+            first_name="Instructor",
+            last_name="User",
+            is_instructor=True,
+        )
+
+        # TA user
+        self.ta_user = User.objects.create(
+            username="ta_user",
+            email_address="ta@example.com",
+            password="tapassword",
+            first_name="TA",
+            last_name="User",
+            is_ta=True,
+        )
+
+        # Regular user
+        self.regular_user = User.objects.create(
+            username="regular_user",
+            email_address="user@example.com",
+            password="userpassword",
+            first_name="Regular",
+            last_name="User",
+        )
+
+        # Course data for testing
+        self.course_data = {
+            "course_id": "CS101",
+            "semester": "Fall 2024",
+            "name": "Introduction to Computer Science",
+            "description": "A beginner's course in computer science.",
+            "num_of_sections": 3,
+            "modality": "In-person",
+        }
+
+    def test_admin_can_create_course(self):
+        # Log in as admin
+        self.client.login(username="admin_user", password="adminpassword")
+        response = self.client.post(reverse("course-create"), self.course_data)
+
+        # Check response and database
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.assertTrue(Course.objects.filter(course_id="CS101").exists())
+
+
+   

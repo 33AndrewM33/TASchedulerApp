@@ -17,15 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from TAScheduler import views  # Import your custom views
+from TAScheduler.views import LoginManagement, LogoutManagement, CourseManagement
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.custom_login, name='login'),  # Root path for login page
-    path('logout/', views.custom_logout, name='logout'),  # Optional custom logout
-    path('home/', lambda request: None, name='manage_account'), #Changed from /home/manage_account
+    path('', LoginManagement.as_view(), name='login'),  # Class-based login view
+    path('logout/', LogoutManagement.as_view(), name='logout'),  # Class-based logout view
+    path('home/', lambda request: None, name='manage_account'),
     path('home/managecourse/', lambda request: None, name='manage_course'),
     path('home/managesection/', lambda request: None, name='manage_section'),
     path('home/managesection/create/', lambda request: None, name='create_section'),
-    path('home/managecourse/create/', views.course_create, name='course-create'),  # Added course creation URL
-    
+    path('home/managecourse/create/', CourseManagement.as_view(), name='course-create'),
+    path('home/managecourse/list/', CourseManagement.as_view(), name='course-list'),
 ]

@@ -1,9 +1,9 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class User(models.Model):
+class User(AbstractUser):
     
     username=models.CharField(max_length=50, unique=True)
     email_address = models.EmailField(unique=True, max_length=90)  # Email validation and unique constraint
@@ -67,7 +67,9 @@ class Course(models.Model):
     semester = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     description = models.TextField()
-    num_of_sections = models.IntegerField()
+    num_of_sections = models.IntegerField(
+        validators=[MinValueValidator(0)]  # Ensure value is 0 or greater
+    )
     modality = models.CharField(max_length=50, choices=[("Online", "Online"), ("In-person", "In-person")])
     instructor = models.ForeignKey(
         Instructor,
@@ -86,12 +88,23 @@ class Course(models.Model):
 
 
     def edit_Course(self, **kwargs):
-        """Update course details and save changes."""
+        # Validate and update fields
+        if 'name' in kwargs:
+            if not kwargs['name']:  # Check for empty values
+                raise ValueError("Course name cannot be empty.")
+            self.name = kwargs['name']
+
+        if 'num_of_sections' in kwargs:
+            if kwargs['num_of_sections'] < 0:  # Check for negative values
+                raise ValueError("Number of sections cannot be negative.")
+            self.num_of_sections = kwargs['num_of_sections']
+
+        # Update other fields if present in kwargs
         for field, value in kwargs.items():
-            if hasattr(self, field):  # Ensure the field exists in the model
-                setattr(self, field, value)  # Update the field with the new value
-            else:
-                raise ValueError(f"Invalid field '{field}' for Course model.")
+            if hasattr(self, field):
+                setattr(self, field, value)
+
+        # Save the updated course instance
         self.save()
 
 class Section(models.Model):
