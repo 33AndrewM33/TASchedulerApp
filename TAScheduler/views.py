@@ -23,7 +23,6 @@ class LoginManagement(View):
             return redirect('/home/')  # Redirect after successful login
         return render(request, "login.html", {"error": "Invalid username or password"})
 
-
 class LogoutManagement(View):
     def get(self, request):
         logout(request)
@@ -50,10 +49,7 @@ class Edit_Course(View):
             return redirect("course-list")  # Redirect after editing
         else:
             return HttpResponseForbidden("You do not have permission to edit this course.")
-
-
-
-    
+   
     
 @method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
 class CourseCreation(View):

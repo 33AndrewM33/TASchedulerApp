@@ -88,7 +88,7 @@ class Course(models.Model):
 
 
     def edit_Course(self, **kwargs):
-        # Validate and update fields
+        # Validate and update basic fields
         if 'name' in kwargs:
             if not kwargs['name']:  # Check for empty values
                 raise ValueError("Course name cannot be empty.")
@@ -99,13 +99,30 @@ class Course(models.Model):
                 raise ValueError("Number of sections cannot be negative.")
             self.num_of_sections = kwargs['num_of_sections']
 
-        # Update other fields if present in kwargs
+        # Update other fields
         for field, value in kwargs.items():
-            if hasattr(self, field):
+            if hasattr(self, field) and field != 'instructors':  # Skip 'instructors'
                 setattr(self, field, value)
+
+        # Handle instructor assignments if provided
+        if 'instructors' in kwargs:
+            instructor_list = kwargs['instructors']
+            if not isinstance(instructor_list, list):
+                raise ValueError("Instructors should be a list of Instructor instances.")
+            
+            # Clear existing assignments
+            InstructorToCourse.objects.filter(course=self).delete()
+            
+            # Add new assignments
+            for instructor in instructor_list:
+                if isinstance(instructor, Instructor):
+                    InstructorToCourse.objects.create(instructor=instructor, course=self)
+                else:
+                    raise ValueError("Each instructor must be an instance of the Instructor model.")
 
         # Save the updated course instance
         self.save()
+
 
 class Section(models.Model):
     section_id = models.IntegerField()

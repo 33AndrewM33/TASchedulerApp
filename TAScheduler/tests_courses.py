@@ -2,7 +2,7 @@ from django.db import IntegrityError
 from django.forms import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
-from TAScheduler.models import Administrator, Course, Instructor, Section, User
+from TAScheduler.models import Administrator, Course, Instructor, InstructorToCourse, Section, User
 from django.core.exceptions import PermissionDenied
 from django.db.models.deletion import ProtectedError
 
@@ -505,3 +505,116 @@ class CourseCreatePermissionTest(TestCase):
         self.assertEqual(response.status_code, 302)  # Forbidden
         self.assertFalse(Course.objects.filter(course_id="CS101").exists())
 
+class AssignInstructorToCourse(TestCase):
+    def setUp(self):
+        # Create users
+        self.user1 = User.objects.create(
+            username="instructor1", email_address="instructor1@example.com", is_instructor=True
+        )
+        self.user2 = User.objects.create(
+            username="instructor2", email_address="instructor2@example.com", is_instructor=True
+        )
+
+        # Create instructors
+        self.instructor1 = Instructor.objects.create(user=self.user1, max_assignments=3)
+        self.instructor2 = Instructor.objects.create(user=self.user2, max_assignments=3)
+
+        # Create a course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            semester="Fall 2024",
+            name="Introduction to Computer Science",
+            description="A beginner's course in computer science.",
+            num_of_sections=3,
+            modality="In-person",
+        )
+    def test_assign_single_instructor_to_course(self):
+        # Assign instructor1 to the course
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+
+        # Fetch assignments
+        assignments = InstructorToCourse.objects.filter(course=self.course)
+
+        # Assertions
+        self.assertEqual(assignments.count(), 1)
+        self.assertEqual(assignments.first().instructor, self.instructor1)
+
+    def test_assign_multiple_instructors_to_course(self):
+        # Assign both instructors to the course
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+        InstructorToCourse.objects.create(instructor=self.instructor2, course=self.course)
+
+        # Fetch assignments
+        assignments = InstructorToCourse.objects.filter(course=self.course)
+
+        # Assertions
+        self.assertEqual(assignments.count(), 2)
+        self.assertIn(self.instructor1, [a.instructor for a in assignments])
+        self.assertIn(self.instructor2, [a.instructor for a in assignments])
+
+    def test_reassign_instructors_to_course(self):
+        # Assign instructor1 initially
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+
+        # Reassign to instructor2
+        InstructorToCourse.objects.filter(course=self.course).delete()
+        InstructorToCourse.objects.create(instructor=self.instructor2, course=self.course)
+
+        # Fetch assignments
+        assignments = InstructorToCourse.objects.filter(course=self.course)
+
+        # Assertions
+        self.assertEqual(assignments.count(), 1)
+        self.assertEqual(assignments.first().instructor, self.instructor2)
+
+    def test_remove_all_instructors_from_course(self):
+        # Assign both instructors
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+        InstructorToCourse.objects.create(instructor=self.instructor2, course=self.course)
+
+        # Remove all instructors
+        InstructorToCourse.objects.filter(course=self.course).delete()
+
+        # Fetch assignments
+        assignments = InstructorToCourse.objects.filter(course=self.course)
+
+        # Assertions
+        self.assertEqual(assignments.count(), 0)
+
+    def test_prevent_duplicate_instructor_assignment(self):
+        # Assign instructor1 to the course
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+
+        # Attempt to assign the same instructor again
+        with self.assertRaises(Exception):
+            InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+
+        # Fetch assignments
+        assignments = InstructorToCourse.objects.filter(course=self.course)
+
+        # Assertions
+        self.assertEqual(assignments.count(), 1)
+        
+    def test_fetch_courses_for_instructor(self):
+        # Assign instructor1 to the course
+        InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+
+        # Fetch courses for instructor1
+        courses = Course.objects.filter(instructor_assignments__instructor=self.instructor1)
+
+        # Assertions
+        self.assertEqual(courses.count(), 1)
+        self.assertIn(self.course, courses)
+
+
+    def test_assign_non_instructor_to_course(self):
+        # Create a non-instructor user
+        non_instructor_user = User.objects.create(
+            username="student1", email_address="student1@example.com"
+        )
+
+        with self.assertRaises(ValueError):
+            InstructorToCourse.objects.create(
+                instructor=non_instructor_user,  # Should raise error
+                course=self.course
+            )
