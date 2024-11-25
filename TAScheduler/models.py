@@ -3,14 +3,13 @@ from django.db import models
 
 
 class User(models.Model):
-    username=models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True)
     email_address = models.EmailField(unique=True, max_length=90)  # Email validation and unique constraint
     password = models.CharField(max_length=128)  # Supports hashed passwords
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     home_address = models.CharField(max_length=90, blank=True)  # Allow optional fields
     phone_number = models.CharField(max_length=15, blank=True)
-
 
     # User roles
     is_admin = models.BooleanField(default=False)
@@ -19,13 +18,6 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"
-
-
-class Supervisor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="supervisor_profile")
-
-    def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - Supervisor"
 
 
 class TA(models.Model):
@@ -105,10 +97,3 @@ class TAToCourse(models.Model):
 class InstructorToCourse(models.Model):
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="course_assignments")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="instructor_assignments")
-
-
-class Administrator(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="administrator_profile")
-
-    def __str__(self):
-        return f"{self.user} - Administrator"
