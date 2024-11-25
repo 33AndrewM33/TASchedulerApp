@@ -1,4 +1,4 @@
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.forms import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -581,19 +581,22 @@ class AssignInstructorToCourse(TestCase):
         # Assertions
         self.assertEqual(assignments.count(), 0)
 
+
     def test_prevent_duplicate_instructor_assignment(self):
         # Assign instructor1 to the course
         InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
 
         # Attempt to assign the same instructor again
-        with self.assertRaises(Exception):
-            InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():  # Ensure the operation is isolated
+                InstructorToCourse.objects.create(instructor=self.instructor1, course=self.course)
 
         # Fetch assignments
         assignments = InstructorToCourse.objects.filter(course=self.course)
 
         # Assertions
         self.assertEqual(assignments.count(), 1)
+
         
     def test_fetch_courses_for_instructor(self):
         # Assign instructor1 to the course

@@ -159,6 +159,16 @@ class TAToCourse(models.Model):
 class InstructorToCourse(models.Model):
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="course_assignments")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="instructor_assignments")
+    
+    class Meta:
+        # Adds a unique constraint to ensure that each instructor-course pair is unique
+        constraints = [
+            models.UniqueConstraint(
+                fields=["instructor", "course"],  # Specifies the combination of fields to enforce uniqueness
+                name="unique_instructor_course"  # Gives a name to the constraint for easy reference
+            )
+        ]
+
 
 
 class Administrator(models.Model):
