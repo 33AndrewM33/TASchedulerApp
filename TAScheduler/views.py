@@ -1,5 +1,5 @@
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -36,7 +36,27 @@ def is_admin_or_instructor(user):
 
 
 @method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
-class CourseManagement(View):
+class Edit_Course(View):
+    def post(self, request, course_id):
+        course = get_object_or_404(Course, course_id=course_id)
+
+        # Check user permissions explicitly
+        if request.user.is_admin or request.user.is_instructor:
+            # Update course fields only if permission is granted
+            course.name = request.POST.get("name", course.name)
+            course.description = request.POST.get("description", course.description)
+            course.num_of_sections = request.POST.get("num_of_sections", course.num_of_sections)
+            course.save()
+            return redirect("course-list")  # Redirect after editing
+        else:
+            return HttpResponseForbidden("You do not have permission to edit this course.")
+
+
+
+    
+    
+@method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
+class CourseCreation(View):
     def get(self, request):
         # Render a list of courses
         courses = Course.objects.all()

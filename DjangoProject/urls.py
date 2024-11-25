@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from TAScheduler import views  # Import your custom views
-from TAScheduler.views import LoginManagement, LogoutManagement, CourseManagement
+from TAScheduler.views import Edit_Course, LoginManagement, LogoutManagement, CourseCreation
 
 
 urlpatterns = [
@@ -28,6 +28,7 @@ urlpatterns = [
     path('home/managecourse/', lambda request: None, name='manage_course'),
     path('home/managesection/', lambda request: None, name='manage_section'),
     path('home/managesection/create/', lambda request: None, name='create_section'),
-    path('home/managecourse/create/', CourseManagement.as_view(), name='course-create'),
-    path('home/managecourse/list/', CourseManagement.as_view(), name='course-list'),
+    path('home/managecourse/create/', CourseCreation.as_view(), name='course-create'),
+    path('home/managecourse/list/', CourseCreation.as_view(), name='course-list'),
+    path("courses/<str:course_id>/edit/", Edit_Course.as_view(), name="edit-course"),
 ]

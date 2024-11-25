@@ -6,6 +6,103 @@ from TAScheduler.models import Administrator, Course, Instructor, Section, User
 from django.core.exceptions import PermissionDenied
 from django.db.models.deletion import ProtectedError
 
+
+class CourseEditPermissionTest(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create(username="admin", is_admin=True)
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
+        self.course = Course.objects.create(
+            course_id="CS101",
+            semester="Fall 2024",
+            name="Introduction to Computer Science",
+            description="A beginner's course in computer science.",
+            num_of_sections=3,
+            modality="In-person",
+        )
+
+        self.edit_url = reverse("edit-course", args=[self.course.course_id])
+        
+                # Instructor user
+        self.instructor_user = User.objects.create(
+            username="instructor_user",
+            email_address="instructor@example.com",
+            first_name="Instructor",
+            last_name="User",
+            is_instructor=True,
+        )
+        self.instructor_user.set_password("instructorpassword") # Sets hashed password, allowing use of build in Django testing for autherization capabiltiies 
+        self.instructor_user.save()
+
+    def test_admin_can_edit_course(self):
+        self.client.login(username="admin", password="adminpassword")
+        response = self.client.post(self.edit_url, {
+            "name": "Updated Name",
+            "description": "Updated Description",
+            "num_of_sections": 5,
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.name, "Updated Name")
+        
+    def test_instructor_can_edit_course(self):
+    # Log in as instructor
+        self.client.login(username="instructor_user", password="instructorpassword")
+
+        # Make a POST request to edit the course
+        response = self.client.post(self.edit_url, {
+            "name": "Updated Name by Instructor",
+            "description": "Updated Description by Instructor",
+            "num_of_sections": 5,
+        })
+
+        # Check response status
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+
+        # Fetch the updated course
+        updated_course = Course.objects.get(course_id=self.course.course_id)
+
+        # Verify the updates
+        self.assertEqual(updated_course.name, "Updated Name by Instructor")
+        self.assertEqual(updated_course.description, "Updated Description by Instructor")
+        self.assertEqual(updated_course.num_of_sections, 5)
+
+
+
+
+    def test_ta_cannot_edit_course(self):
+        self.client.login(username="ta", password="tapassword")
+        response = self.client.post(self.edit_url, {
+            "name": "TA Attempted Edit",
+            "description": "TA Description",
+            "num_of_sections": 2,
+        })
+        self.assertEqual(response.status_code, 302)  # Forbidden
+        self.course.refresh_from_db()
+        self.assertNotEqual(self.course.name, "TA Attempted Edit")
+
+    def test_regular_user_cannot_edit_course(self):
+        self.client.login(username="regular", password="regularpassword")
+        response = self.client.post(self.edit_url, {
+            "name": "Regular User Attempted Edit",
+            "description": "Regular User Description",
+            "num_of_sections": 1,
+        })
+        self.assertEqual(response.status_code, 302)  # Forbidden
+        self.course.refresh_from_db()
+        self.assertNotEqual(self.course.name, "Regular User Attempted Edit")
+
+    def test_anonymous_user_cannot_edit_course(self):
+        response = self.client.post(self.edit_url, {
+            "name": "Anonymous User Attempted Edit",
+            "description": "Anonymous Description",
+            "num_of_sections": 1,
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect to login
+        self.course.refresh_from_db()
+        self.assertNotEqual(self.course.name, "Anonymous User Attempted Edit")
+    
 class CourseCreationTest(TestCase):
     def setUp(self):
         self.course_data = {
@@ -333,12 +430,12 @@ class CourseCreatePermissionTest(TestCase):
         self.instructor_user = User.objects.create(
             username="instructor_user",
             email_address="instructor@example.com",
-            password="instructorpassword",
             first_name="Instructor",
             last_name="User",
             is_instructor=True,
         )
-
+        self.instructor_user.set_password("instructorpassword") # Sets hashed password, allowing use of build in Django testing for autherization capabiltiies 
+        self.instructor_user.save()
         # TA user
         self.ta_user = User.objects.create(
             username="ta_user",
@@ -377,5 +474,34 @@ class CourseCreatePermissionTest(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirect after success
         self.assertTrue(Course.objects.filter(course_id="CS101").exists())
 
+    def test_ta_cannot_create_course(self):
+        # Log in as TA
+        self.client.login(username="ta_user", password="tapassword")
+        response = self.client.post(reverse("course-create"), self.course_data)
 
-   
+        # Check response status and database
+        self.assertEqual(response.status_code, 302)  # Redirect if unauthorized
+        self.assertFalse(Course.objects.filter(course_id="CS101").exists())  # Ensure no course was created
+
+    def test_instructor_can_create_course(self):
+        # Log in as Instructor
+        self.client.login(username="instructor_user", password="instructorpassword")
+        
+        # Try to create a course
+        response = self.client.post(reverse("course-create"), self.course_data)
+
+        # Check response and database
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.assertTrue(Course.objects.filter(course_id="CS101").exists())
+
+    def test_regular_user_cannot_create_course(self):
+        # Log in as a Regular User
+        self.client.login(username="regular_user", password="userpassword")
+        
+        # Try to create a course
+        response = self.client.post(reverse("course-create"), self.course_data)
+
+        # Check response and database
+        self.assertEqual(response.status_code, 302)  # Forbidden
+        self.assertFalse(Course.objects.filter(course_id="CS101").exists())
+
