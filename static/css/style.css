@@ -17,14 +17,59 @@ body {
     padding: 10px;
 }
 
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+}
+
+.aom {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 60vw;
+    height: 80%;
+    border-radius: 10px;
+    position: relative;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    background: url("https://i.postimg.cc/HLcWdV3h/ta.jpg") no-repeat center center;
+    background-size: cover;
+    position: absolute;
+    opacity: 0.3;
+    top: 0;
+    left: 0;
+    border-radius: 12px;
+;
+    box-shadow: 5px 12px 23px rgba(0, 0, 0, 0.7);
+    z-index: 1;
+    /*filter: brightness(0.5); !* Makes the image darker for better text visibility *!*/
+}
+
+.image h2{
+    color: black;
+        position: absolute;
+    top:0px;
+    font-family: "Amatic SC";
+    font-size: 40px;
+    left:26px;
+}
+
+
 /* Form Container */
 form {
-    display: block;
-    background-color: transparent;
-    color: #333;
+    position: relative;
+    z-index: 2; /* Ensures the form is above the background image */
+    background-color:transparent;/* Slightly transparent background */
+    color: white;
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
     width: 100%;
     max-width: 400px;
     text-align: center;
@@ -46,10 +91,16 @@ form h2 {
 
 .form-group label {
     display: block;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: bold;
     margin-bottom: 5px;
-    color: #333;
+    color: rgb(255, 255, 255);
+}
+
+.form-item{
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.4);
+    width: 40%;
 }
 
 .form-group input {
@@ -59,6 +110,7 @@ form h2 {
     border-radius: 5px;
     font-size: 14px;
     color: #333;
+    background-color: #fff;
 }
 
 .form-group input:focus {
@@ -109,19 +161,24 @@ a:hover {
     font-weight: bold;
 }
 
-.pdd{
-    color:red;
-}
-
-
 /* Responsive Design */
 @media (max-width: 768px) {
+    .aom {
+        flex-direction: column;
+        max-width: 90vw;
+        height: auto;
+    }
+
+    .image {
+        height: 200px;
+    }
+
     form {
         padding: 20px;
         width: 90%;
     }
 
-    h2 {
+    form h2 {
         font-size: 20px;
     }
 }

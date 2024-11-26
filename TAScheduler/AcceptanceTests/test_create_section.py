@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.test import TestCase, Client
-from TAScheduler.models import Section, Course, Lecture, Lab, Administrator, User
+from TAScheduler.models import Section, Course, Lecture, Lab, User
 
 
 class CreateSectionTestCase(TestCase):
@@ -8,18 +8,18 @@ class CreateSectionTestCase(TestCase):
         self.client = Client()
 
         # Create administrator account
-        self.admin_user = Administrator.objects.create(
-            user=User.objects.create(
-                email_address="admin@example.com",
-                password="adminpassword",
-                first_name="Admin",
-                last_name="User",
-                home_address="123 Admin St",
-                phone_number="1234567890"
-            )
+        self.admin_user = User.objects.create(
+            username="admin",
+            email_address="admin@example.com",
+            password="adminpassword",
+            first_name="Admin",
+            last_name="User",
+            home_address="123 Admin St",
+            phone_number="1234567890",
+            is_admin=True
         )
         ses = self.client.session
-        ses["user"] = str(self.admin_user)
+        ses["user"] = self.admin_user.email_address
         ses.save()
 
         # Create test courses
@@ -42,7 +42,7 @@ class CreateSectionTestCase(TestCase):
                 section_id=i,
                 course=self.courses[i - 1],
                 location=f"Location {i}",
-                meeting_time=datetime(2023, 1, 1, 1, i, i)
+                meeting_time="Mon/Wed 10:00-11:30"
             )
             self.sections.append(section)
 
@@ -51,18 +51,18 @@ class CreateSectionTestCase(TestCase):
             "course_id": self.courses[0].course_id,
             "section_id": 4,
             "section_type": "Lecture",
-            "meeting_time": datetime(2023, 1, 1, 1, 1, 1),
+            "meeting_time": "Mon/Wed 12:00-1:30",
             "location": "Lecture Hall"
         }
         self.valid_lab_data = {
             "course_id": self.courses[0].course_id,
             "section_id": 5,
             "section_type": "Lab",
-            "meeting_time": datetime(2023, 1, 1, 2, 2, 2),
+            "meeting_time": "Tue/Thu 2:00-3:30",
             "location": "Lab Room"
         }
         self.invalid_data = {
-            "course_id": 999,  # Nonexistent course
+            "course_id": "CS999",  # Nonexistent course
             "section_id": 6,
             "section_type": "Lecture",
             "meeting_time": "",
