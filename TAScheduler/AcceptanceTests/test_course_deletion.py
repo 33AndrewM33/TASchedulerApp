@@ -1,5 +1,5 @@
 from django.test import TestCase, Client
-from TAScheduler.models import Course, Section, User, Administrator
+from TAScheduler.models import Course, Section, User
 
 
 class AdminDeleteCourseTestCase(TestCase):
@@ -7,18 +7,18 @@ class AdminDeleteCourseTestCase(TestCase):
         self.client = Client()
 
         # Create an administrator
-        self.admin_user = Administrator.objects.create(
-            user=User.objects.create(
-                email_address="admin@example.com",
-                password="adminpassword",
-                first_name="Admin",
-                last_name="User",
-                home_address="123 Admin St",
-                phone_number="1234567890"
-            )
+        self.admin_user = User.objects.create(
+            username="admin",
+            email_address="admin@example.com",
+            password="adminpassword",
+            first_name="Admin",
+            last_name="User",
+            home_address="123 Admin St",
+            phone_number="1234567890",
+            is_admin=True  # Mark this user as an administrator
         )
         ses = self.client.session
-        ses["user"] = self.admin_user.user.email_address
+        ses["user"] = self.admin_user.email_address
         ses.save()
 
         # Create a course with sections

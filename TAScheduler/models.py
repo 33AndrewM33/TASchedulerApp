@@ -3,7 +3,7 @@ from django.db import models
 
 
 class User(models.Model):
-    username=models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True)
     email_address = models.EmailField(unique=True, max_length=90)  # Email validation and unique constraint
     password = models.CharField(max_length=128)  # Supports hashed passwords
     first_name = models.CharField(max_length=30)
@@ -11,25 +11,23 @@ class User(models.Model):
     home_address = models.CharField(max_length=90, blank=True)  # Allow optional fields
     phone_number = models.CharField(max_length=15, blank=True)
 
-
     # User roles
-    is_admin = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)  # For Administrators
     is_instructor = models.BooleanField(default=False)
     is_ta = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"
 
-
-class Supervisor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="supervisor_profile")
-
+class Admin(User):
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - Supervisor"
+        return f"{self.first_name} {self.last_name} ({self.email_address})"
 
 
-class TA(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="ta_profile")
+class TA(User):
     grader_status = models.BooleanField()
     skills = models.TextField(null=True, default="No skills listed")
     max_assignments = models.IntegerField(
@@ -41,11 +39,10 @@ class TA(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user} - TA"
+        return f"{self.first_name} - TA"
 
 
-class Instructor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="instructor_profile")
+class Instructor(User):
     max_assignments = models.IntegerField(
         default=6,
         validators=[
@@ -55,7 +52,7 @@ class Instructor(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user} - Instructor"
+        return f"{self.first_name} - Instructor"
 
 
 class Course(models.Model):
@@ -80,35 +77,18 @@ class Section(models.Model):
         return f"Section {self.section_id} - {self.course}"
 
 
-class Lab(models.Model):
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="labs")
+class Lab(Section):
     ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="assigned_labs")
 
     def __str__(self):
-        return f"Lab: {self.section}"
+        return f"Lab: {self.section_id}"
 
 
-class Lecture(models.Model):
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="lectures")
+class Lecture(Section):
     instructor = models.ForeignKey(Instructor, on_delete=models.SET_NULL, null=True, related_name="assigned_lectures")
     ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="grading_lectures")
 
     def __str__(self):
-        return f"Lecture: {self.section}"
+        return f"Lecture: {self.section_id}"
 
 
-class TAToCourse(models.Model):
-    ta = models.ForeignKey(TA, on_delete=models.CASCADE, related_name="course_assignments")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="ta_assignments")
-
-
-class InstructorToCourse(models.Model):
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="course_assignments")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="instructor_assignments")
-
-
-class Administrator(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="administrator_profile")
-
-    def __str__(self):
-        return f"{self.user} - Administrator"
