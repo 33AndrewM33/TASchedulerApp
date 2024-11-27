@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
+    </header>
+    <nav>
+        <table>
+            <tr>
+                <td>
+                    <a class="nav-button" href="/home/manageaccount/">Account Management</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="nav-button" href="/home/managecourse/">Course Management</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="nav-button" href="/home/managesection/">Section Management</a>
+                </td>
+            </tr>
+        </table>
+    </nav>
+    <section>
+        <!-- Display success messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="success">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    <footer>
+        <form action="/logout/" method="post">
+            {% csrf_token %}
+            <input type="submit" class="logout-button" value="Logout">
+        </form>
+    </footer>
+</body>
+</html>

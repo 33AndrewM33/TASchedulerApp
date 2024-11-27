@@ -1,8 +1,6 @@
 from django.contrib import admin
-from TAScheduler.models import User, Supervisor, TA, Instructor, Course, Section, Lab, Lecture
+from TAScheduler.models import User, TA, Instructor, Course, Section, Lab, Lecture, Admin
 
-admin.site.register(User)
-admin.site.register(Supervisor)
 admin.site.register(TA)
 admin.site.register(Instructor)
 admin.site.register(Course)
