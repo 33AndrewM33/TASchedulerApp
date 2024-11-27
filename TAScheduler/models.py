@@ -1,4 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -35,7 +36,7 @@ class TA(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user} - TA"
+        return f"{self.first_name} {self.last_name} - TA"
 
 
 class Instructor(models.Model):
@@ -49,7 +50,19 @@ class Instructor(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user} - Instructor"
+        return f"{self.first_name} {self.last_name} - Instructor"
+
+
+class Administrator(User):  # Administrator inherits from User
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - Administrator"
+
+
+class Administrator(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user} - Administrator"
 
 
 class Administrator(models.Model):
@@ -98,6 +111,44 @@ class RoleToCourse(models.Model):
         return f"{self.user} ({self.get_role_display()})- {self.course}"
 
 
+    
+    
+    def edit_Course(self, **kwargs):
+            # Validate and update basic fields
+            if 'name' in kwargs:
+                if not kwargs['name']:  # Check for empty values
+                    raise ValueError("Course name cannot be empty.")
+                self.name = kwargs['name']
+
+            if 'num_of_sections' in kwargs:
+                if kwargs['num_of_sections'] < 0:  # Check for negative values
+                    raise ValueError("Number of sections cannot be negative.")
+                self.num_of_sections = kwargs['num_of_sections']
+
+            # Update other fields
+            for field, value in kwargs.items():
+                if hasattr(self, field) and field != 'instructors':  # Skip 'instructors'
+                    setattr(self, field, value)
+
+            # Handle instructor assignments if provided
+            if 'instructors' in kwargs:
+                instructor_list = kwargs['instructors']
+                if not isinstance(instructor_list, list):
+                    raise ValueError("Instructors should be a list of Instructor instances.")
+                
+                # Clear existing assignments
+                InstructorToCourse.objects.filter(course=self).delete()
+                
+                # Add new assignments
+                for instructor in instructor_list:
+                    if isinstance(instructor, Instructor):
+                        InstructorToCourse.objects.create(instructor=instructor, course=self)
+                    else:
+                        raise ValueError("Each instructor must be an instance of the Instructor model.")
+
+            # Save the updated course instance
+            self.save()
+
 class Section(models.Model):
     section_id = models.IntegerField()
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
@@ -113,7 +164,7 @@ class Lab(models.Model):
     ta = models.ForeignKey("TA", on_delete=models.SET_NULL, null=True, related_name="assigned_labs")
 
     def __str__(self):
-        return f"Lab: {self.section}"
+        return f"Lab: {self.section_id} - {self.course}"
 
 
 class Lecture(models.Model):
@@ -122,6 +173,6 @@ class Lecture(models.Model):
     ta = models.ForeignKey("TA", on_delete=models.SET_NULL, null=True, related_name="grading_lectures")
 
     def __str__(self):
-        return f"Lecture: {self.section}"
+        return f"Lecture: {self.section_id} - {self.course}"
 
 

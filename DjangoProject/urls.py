@@ -1,6 +1,9 @@
 from django.contrib import admin
+from django.shortcuts import render
 from django.urls import path
 from TAScheduler import views  # Import your custom views
+from TAScheduler.views import Edit_Course, LoginManagement, LogoutManagement, CourseCreation
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # Admin panel
