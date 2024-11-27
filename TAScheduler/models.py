@@ -19,6 +19,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"
+    
+    class Meta:
+        abstract = True  # Makes User abstract
 
 
 class TA(User):  # TA inherits from User
@@ -73,6 +76,9 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.course_id}: {self.name}"
+    
+
+    
     
     def edit_Course(self, **kwargs):
             # Validate and update basic fields

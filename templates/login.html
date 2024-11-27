@@ -5,25 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Funnel+Display:wght@300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <form id="loginForm" action="/" method="post">
-        <h2>TA Login</h2>
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username">
+    <div class="container">
+
+        <div class="aom">
+            <div class="image"><h2>TA Login</h2></div>
+            <form id="loginForm" action="/" method="post">
+
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username" class="form-item">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="pdd form-item">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <a href="/forgot_password/" class="nav-button">Forgot Password?</a>
+                <input type="submit" value="Login" class="nav-button">
+                {% if error %}
+                <div class="error">{{ error }}</div>
+                {% endif %}
+            </form>
         </div>
-        <div class="form-group">
-            <label for="password" class="pdd">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
-        </div>
-        <a href="/forgot_password/" class="nav-button">Forgot Password?</a>
-        <input type="submit" value="Login" class="nav-button">
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-    </form>
+    </div>
 </body>
 </html>
