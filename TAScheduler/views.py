@@ -6,6 +6,27 @@ from django.views import View
 from TAScheduler.models import Course
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
+from django.shortcuts import render
+
+
+
+def home_view(request):
+    return render(request, 'home.html') 
+
+def manage_course_view(request):
+    return render(request, 'course_list.html')  # Ensure 'course_list.html' exists
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class LoginManagement(View):
@@ -56,7 +77,7 @@ class CourseCreation(View):
     def get(self, request):
         # Render a list of courses
         courses = Course.objects.all()
-        return render(request, "course_list.html", {"courses": courses})
+        return render(request, "create_course.html")  # Ensure this template exists
 
     def post(self, request):
         # Handle course creation
