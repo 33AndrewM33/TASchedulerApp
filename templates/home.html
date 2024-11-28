@@ -14,17 +14,17 @@
         <table>
             <tr>
                 <td>
-                    <a class="nav-button" href="/home/manageaccount/">Account Management</a>
+                    <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <a class="nav-button" href="/home/managecourse/">Course Management</a>
+                    <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <a class="nav-button" href="/home/managesection/">Section Management</a>
+                    <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
                 </td>
             </tr>
         </table>
@@ -40,7 +40,7 @@
         {% endif %}
     </section>
     <footer>
-        <form action="/logout/" method="post">
+        <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <input type="submit" class="logout-button" value="Logout">
         </form>

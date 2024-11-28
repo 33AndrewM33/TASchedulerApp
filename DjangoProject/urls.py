@@ -11,4 +11,7 @@ urlpatterns = [
     path('home/managesection/', views.manage_section, name='manage_section'),  # Manage sections
     path('home/managesection/create/', views.create_section, name='create_section'),  # Create section
     path('forgot_password/', views.forgot_password, name='forgot_password'),  # Forgot password
+    path('home/accountmanagement/', views.account_management, name='account_management'),  # Account management
+    path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # New edit user route
+
 ]

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from TAScheduler.models import User, TA, Instructor, Course, Section, Lab, Lecture, TAToCourse, InstructorToCourse
+from TAScheduler.models import User, TA, Instructor, Course, Section, Lab, Lecture
 
 
 class ModelsTestCase(TestCase):

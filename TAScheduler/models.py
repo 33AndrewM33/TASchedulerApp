@@ -16,20 +16,30 @@ class User(models.Model):
     is_instructor = models.BooleanField(default=False)
     is_ta = models.BooleanField(default=False)
 
-    class Meta:
-        abstract = True
+    def get_role(self):
+        """Return the role of the user as a string."""
+        if self.is_admin:
+            return "Administrator"
+        elif self.is_instructor:
+            return "Instructor"
+        elif self.is_ta:
+            return "TA"
+        return "No Role"
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"
 
-class Admin(User):
+
+class Administrator(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="administrator_profile")
+
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.email_address})"
+        return f"{self.user.first_name} {self.user.last_name} - Administrator"
 
 
-class TA(User):
-    grader_status = models.BooleanField()
-    skills = models.TextField(null=True, default="No skills listed")
+class TA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="ta_profile")
+    skills = models.TextField(null=True, blank=True, default="No skills listed")
     max_assignments = models.IntegerField(
         default=6,
         validators=[
@@ -39,10 +49,11 @@ class TA(User):
     )
 
     def __str__(self):
-        return f"{self.first_name} - TA"
+        return f"{self.user.first_name} - TA"
 
 
-class Instructor(User):
+class Instructor(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="instructor_profile")
     max_assignments = models.IntegerField(
         default=6,
         validators=[
@@ -52,7 +63,7 @@ class Instructor(User):
     )
 
     def __str__(self):
-        return f"{self.first_name} - Instructor"
+        return f"{self.user.first_name} - Instructor"
 
 
 class Course(models.Model):
@@ -77,18 +88,18 @@ class Section(models.Model):
         return f"Section {self.section_id} - {self.course}"
 
 
-class Lab(Section):
+class Lab(models.Model):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="labs")
     ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="assigned_labs")
 
     def __str__(self):
-        return f"Lab: {self.section_id}"
+        return f"Lab in {self.section}"
 
 
-class Lecture(Section):
+class Lecture(models.Model):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="lectures")
     instructor = models.ForeignKey(Instructor, on_delete=models.SET_NULL, null=True, related_name="assigned_lectures")
     ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="grading_lectures")
 
     def __str__(self):
-        return f"Lecture: {self.section_id}"
-
-
+        return f"Lecture in {self.section}"

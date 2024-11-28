@@ -1,22 +1,38 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from django.contrib import messages  # Import messages framework
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from TAScheduler.models import Course, Section, Lab, Lecture  # Import your models
+from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
 
 
 @login_required
 def manage_course(request):
-    # Add logic for managing courses here.
+    # Add logic for managing courses here
     return render(request, 'manage_course.html', {"user": request.user})
 
 
 @login_required
 def manage_section(request):
-    # Add logic for managing sections here.
-    return render(request, 'manage_section.html', {"user": request.user})
+    if request.method == "POST":
+        section_id = request.POST.get("section_id")
+        action = request.POST.get("delete")  # Check if "delete" action is triggered
+
+        if action == "Delete":
+            try:
+                # Fetch the section
+                section = Section.objects.get(section_id=section_id)
+                section.delete()  # Delete the section
+                messages.success(request, "Successfully Deleted Section")
+            except Section.DoesNotExist:
+                messages.error(request, "Section not found.")
+            except Exception as e:
+                messages.error(request, f"Failed to delete section: {str(e)}")
+
+    # Fetch all sections to display on the page
+    sections = Section.objects.all()
+    return render(request, 'manage_section.html', {"user": request.user, "sections": sections})
 
 
 @login_required
@@ -56,6 +72,105 @@ def create_section(request):
             messages.error(request, f"An error occurred: {str(e)}")
 
     return render(request, 'create_section.html', {"user": request.user})
+
+
+@login_required
+def account_management(request):
+    editing_user = None
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create":
+            # Handle user creation
+            username = request.POST.get("username")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+            role = request.POST.get("role")
+
+            try:
+                # Create the base user
+                new_user = User.objects.create(
+                    username=username,
+                    email_address=email,
+                    password=make_password(password)
+                )
+
+                # Assign role-specific attributes
+                if role == "ta":
+                    new_user.is_ta = True
+                    TA.objects.create(user=new_user)
+                elif role == "instructor":
+                    new_user.is_instructor = True
+                    Instructor.objects.create(user=new_user)
+                elif role == "administrator":
+                    new_user.is_admin = True
+                    Administrator.objects.create(user=new_user)
+                new_user.save()
+
+                messages.success(request, f"User '{username}' created successfully.")
+            except Exception as e:
+                messages.error(request, f"Error creating user: {str(e)}")
+
+        elif action == "delete":
+            # Handle user deletion
+            user_id = request.POST.get("user_id")
+            try:
+                user_to_delete = get_object_or_404(User, id=user_id)
+                user_to_delete.delete()
+                messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
+            except Exception as e:
+                messages.error(request, f"Error deleting user: {str(e)}")
+
+        elif action == "edit":
+            # Load user data for editing
+            user_id = request.POST.get("user_id")
+            editing_user = get_object_or_404(User, id=user_id)
+
+        elif action == "update":
+            # Handle updating user information
+            user_id = request.POST.get("editing_user_id")
+            username = request.POST.get("username")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+            role = request.POST.get("role")
+
+            try:
+                user_to_update = get_object_or_404(User, id=user_id)
+                user_to_update.username = username
+                user_to_update.email_address = email
+
+                # Update password only if provided
+                if password:
+                    user_to_update.password = make_password(password)
+
+                # Reset roles
+                user_to_update.is_ta = False
+                user_to_update.is_instructor = False
+                user_to_update.is_admin = False
+
+                # Assign new role
+                if role == "ta":
+                    user_to_update.is_ta = True
+                    if not hasattr(user_to_update, "ta_profile"):
+                        TA.objects.create(user=user_to_update)
+                elif role == "instructor":
+                    user_to_update.is_instructor = True
+                    if not hasattr(user_to_update, "instructor_profile"):
+                        Instructor.objects.create(user=user_to_update)
+                elif role == "administrator":
+                    user_to_update.is_admin = True
+                    if not hasattr(user_to_update, "administrator_profile"):
+                        Administrator.objects.create(user=user_to_update)
+
+                user_to_update.save()
+                messages.success(request, f"User '{username}' updated successfully.")
+            except Exception as e:
+                messages.error(request, f"Error updating user: {str(e)}")
+
+    # Retrieve all users to display
+    users = User.objects.all()
+    return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
 
 
 def custom_login(request):
@@ -143,3 +258,47 @@ def forgot_password(request):
                 error = "Session expired. Please start the process again."
 
     return render(request, "forgot_password.html", {"error": error})
+
+@login_required
+def edit_user(request, user_id):
+    # Fetch the user to edit
+    user_to_edit = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        # Get updated data from the form
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        role = request.POST.get("role")
+
+        # Update user fields
+        user_to_edit.username = username
+        user_to_edit.email_address = email
+
+        # Update the password if provided
+        if password:
+            user_to_edit.password = make_password(password)
+
+        # Update roles
+        user_to_edit.is_ta = role == "ta"
+        user_to_edit.is_instructor = role == "instructor"
+        user_to_edit.is_admin = role == "administrator"
+        user_to_edit.save()
+
+        # Update role-specific models
+        if role == "ta" and not hasattr(user_to_edit, "ta_profile"):
+            TA.objects.create(user=user_to_edit)
+        elif role == "instructor" and not hasattr(user_to_edit, "instructor_profile"):
+            Instructor.objects.create(user=user_to_edit)
+        elif role == "administrator" and not hasattr(user_to_edit, "administrator_profile"):
+            Administrator.objects.create(user=user_to_edit)
+
+        messages.success(request, f"User '{username}' updated successfully.")
+        return redirect("account_management")  # Redirect back to account management
+
+    # Pass current user info to the template
+    context = {
+        "user_to_edit": user_to_edit,
+        "roles": ["ta", "instructor", "administrator"],
+    }
+    return render(request, "edit_user.html", context)
