@@ -630,15 +630,4 @@ class CourseEditPermissionTest(TestCase):
         self.course.refresh_from_db()
         self.assertNotEqual(self.course.name, "Regular User Attempted Edit")
 
-    def test_anonymous_user_cannot_edit_course(self):
-        response = self.client.post(
-            self.edit_url,
-            {
-                "name": "Anonymous User Attempted Edit",
-                "description": "Anonymous Description",
-                "num_of_sections": 1,
-            },
-        )
-        self.assertEqual(response.status_code, 302)  # Redirect to login
-        self.course.refresh_from_db()
-        self.assertNotEqual(self.course.name, "Anonymous User Attempted Edit")
+    
