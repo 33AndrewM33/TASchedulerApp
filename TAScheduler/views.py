@@ -286,12 +286,20 @@ def edit_user(request, user_id):
         user_to_edit.save()
 
         # Update role-specific models
-        if role == "ta" and not hasattr(user_to_edit, "ta_profile"):
-            TA.objects.create(user=user_to_edit)
-        elif role == "instructor" and not hasattr(user_to_edit, "instructor_profile"):
-            Instructor.objects.create(user=user_to_edit)
-        elif role == "administrator" and not hasattr(user_to_edit, "administrator_profile"):
-            Administrator.objects.create(user=user_to_edit)
+        if role == "ta":
+            # Handle TA creation or update
+            if not hasattr(user_to_edit, "ta_profile"):
+                TA.objects.create(user=user_to_edit, grader_status=False)  # Default grader_status to False
+            else:
+                ta_profile = user_to_edit.ta_profile
+                ta_profile.grader_status = ta_profile.grader_status or False  # Ensure grader_status is set
+                ta_profile.save()
+        elif role == "instructor":
+            if not hasattr(user_to_edit, "instructor_profile"):
+                Instructor.objects.create(user=user_to_edit)
+        elif role == "administrator":
+            if not hasattr(user_to_edit, "administrator_profile"):
+                Administrator.objects.create(user=user_to_edit)
 
         messages.success(request, f"User '{username}' updated successfully.")
         return redirect("account_management")  # Redirect back to account management

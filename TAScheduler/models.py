@@ -39,6 +39,7 @@ class Administrator(models.Model):
 
 class TA(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="ta_profile")
+    grader_status = models.BooleanField(default=False)  # Ensure default value is False
     skills = models.TextField(null=True, blank=True, default="No skills listed")
     max_assignments = models.IntegerField(
         default=6,
