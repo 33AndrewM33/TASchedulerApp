@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
 from TAScheduler import views  # Import your custom views
-from TAScheduler.views import Edit_Course, LoginManagement, LogoutManagement, CourseCreation
+from TAScheduler.views import EditCourse, LoginManagement, LogoutManagement, CourseCreation
 
 
 urlpatterns = [
@@ -34,9 +34,12 @@ urlpatterns = [
     path('home/managesection/create/', lambda request: render(request, 'create_section.html'), name='create_section'),
 
     # Course Editing and Creation
-    path("courses/<str:course_id>/edit/", Edit_Course.as_view(), name="edit-course"),
+    path("courses/<str:course_id>/edit/", EditCourse.as_view(), name="edit-course"),
     path('courses/create/', CourseCreation.as_view(), name='course-create'),  # Alias for course creation
     path('courses/', CourseCreation.as_view(), name='course-list'),  # List of courses
+
+
+    path('create-account/', views.AccountCreation.as_view(), name='create-account'),
 ]
     
 
