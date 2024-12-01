@@ -3,47 +3,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <header>
-        <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
-    </header>
-    <nav>
-        <table>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
-                </td>
-            </tr>
-        </table>
-    </nav>
-    <section>
-        <!-- Display success messages -->
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="success">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </section>
-    <footer>
-        <form action="{% url 'logout' %}" method="post">
-            {% csrf_token %}
-            <input type="submit" class="logout-button" value="Logout">
-        </form>
-    </footer>
+    <div class="container">
+        <header>
+            <h1>Welcome, {{ user.username }}!</h1>
+            <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+        </header>
+
+        <nav>
+            <table class="nav-table">
+                <tr>
+                    <td>
+                        <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
+                    </td>
+                </tr>
+            </table>
+        </nav>
+
+        <section>
+            <!-- Display success messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="success">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+
+        <footer>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="logout-button" value="Logout">
+            </form>
+        </footer>
+    </div>
 </body>
 </html>
+
+

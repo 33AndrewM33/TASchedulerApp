@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Section</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Create Section</h1>
+        <form method="POST" class="section-form">
+            {% csrf_token %}
+
+            <!-- Course Dropdown -->
+            <label for="course_id">Host Course:</label>
+            <select name="course_id" id="course_id" class="form-control" required>
+                {% for course in courses %}
+                <option value="{{ course.course_id }}">{{ course.course_id }}: {{ course.name }}</option>
+                {% endfor %}
+            </select><br/>
+
+            <!-- Section ID -->
+            <label for="section_id">Section ID:</label>
+            <input type="text" id="section_id" name="section_id" class="form-control" placeholder="Enter unique section ID" required /><br/>
+
+            <!-- Section Type -->
+            <label for="section_type">Section Type:</label>
+            <select name="section_type" id="section_type" class="form-control" required>
+                <option value="Lab">Lab</option>
+                <option value="Lecture">Lecture</option>
+            </select><br/>
+
+            <!-- Meeting Days -->
+            <label for="meeting_days">Meeting Days:</label>
+            <input type="text" id="meeting_days" name="meeting_time" class="form-control" placeholder="E.g., Mon/Wed/Fri 10-11 AM" required /><br/>
+
+            <!-- Location -->
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location" class="form-control" placeholder="Enter location (e.g., Room 101)" required /><br/>
+
+            <!-- Submit Buttons -->
+            <div class="button-group">
+                <button type="submit" class="btn btn-submit">Create Section</button>
+                <a href="{% url 'manage_section' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
