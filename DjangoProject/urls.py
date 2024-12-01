@@ -22,14 +22,21 @@ urlpatterns = [
     path('courses/create/', CourseCreation.as_view(), name='course-create'),  # Alias for course creation
     path('courses/', CourseCreation.as_view(), name='course-list'),  # List of courses
 
-
+    # My branch 
     path("create-account/", AccountCreation.as_view(), name="create-account"),
     path("labs/<int:lab_id>/assign-ta/", AssignTAToLabView.as_view(), name="assign-ta-to-lab"),
     path("lectures/<int:lecture_id>/assign-ta/", AssignTAToLectureView.as_view(), name="assign-ta-to-lecture"),
     path("labs/", lambda request: render(request, "lab_list.html"), name="lab-list"),
     path("lectures/", lambda request: render(request, "lecture_list.html"), name="lecture-list"),
     path('courses/<int:pk>/delete/', DeleteCourseView.as_view(), name='course-delete'),
+    
+    # From main merge
+    path('forgot_password/', views.forgot_password, name='forgot_password'),  # Forgot password
+    path('home/accountmanagement/', views.account_management, name='account_management'),  # Account management
+    path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # New edit user route
+    
 ]
+
 
     
 

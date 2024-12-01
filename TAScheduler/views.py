@@ -1,22 +1,116 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from django.contrib import messages  # Import messages framework
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
-from TAScheduler.models import TA, Course, Section, Lab, Lecture
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
-from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
+from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
+
 
 # Utility function for role checking
 def is_admin_or_instructor(user):
     return user.is_admin or user.is_instructor
 
+@login_required
+def account_management(request):
+        editing_user = None
 
+        if request.method == "POST":
+            action = request.POST.get("action")
+
+            if action == "create":
+                # Handle user creation
+                username = request.POST.get("username")
+                email = request.POST.get("email")
+                password = request.POST.get("password")
+                role = request.POST.get("role")
+
+                try:
+                    # Create the base user
+                    new_user = User.objects.create(
+                        username=username,
+                        email_address=email,
+                        password=make_password(password)
+                    )
+
+                    # Assign role-specific attributes
+                    if role == "ta":
+                        new_user.is_ta = True
+                        TA.objects.create(user=new_user)
+                    elif role == "instructor":
+                        new_user.is_instructor = True
+                        Instructor.objects.create(user=new_user)
+                    elif role == "administrator":
+                        new_user.is_admin = True
+                        Administrator.objects.create(user=new_user)
+                    new_user.save()
+
+                    messages.success(request, f"User '{username}' created successfully.")
+                except Exception as e:
+                    messages.error(request, f"Error creating user: {str(e)}")
+
+            elif action == "delete":
+                # Handle user deletion
+                user_id = request.POST.get("user_id")
+                try:
+                    user_to_delete = get_object_or_404(User, id=user_id)
+                    user_to_delete.delete()
+                    messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
+                except Exception as e:
+                    messages.error(request, f"Error deleting user: {str(e)}")
+
+            elif action == "edit":
+                # Load user data for editing
+                user_id = request.POST.get("user_id")
+                editing_user = get_object_or_404(User, id=user_id)
+
+            elif action == "update":
+                # Handle updating user information
+                user_id = request.POST.get("editing_user_id")
+                username = request.POST.get("username")
+                email = request.POST.get("email")
+                password = request.POST.get("password")
+                role = request.POST.get("role")
+
+                try:
+                    user_to_update = get_object_or_404(User, id=user_id)
+                    user_to_update.username = username
+                    user_to_update.email_address = email
+
+                    # Update password only if provided
+                    if password:
+                        user_to_update.password = make_password(password)
+
+                    # Reset roles
+                    user_to_update.is_ta = False
+                    user_to_update.is_instructor = False
+                    user_to_update.is_admin = False
+
+                    # Assign new role
+                    if role == "ta":
+                        user_to_update.is_ta = True
+                        if not hasattr(user_to_update, "ta_profile"):
+                            TA.objects.create(user=user_to_update)
+                    elif role == "instructor":
+                        user_to_update.is_instructor = True
+                        if not hasattr(user_to_update, "instructor_profile"):
+                            Instructor.objects.create(user=user_to_update)
+                    elif role == "administrator":
+                        user_to_update.is_admin = True
+                        if not hasattr(user_to_update, "administrator_profile"):
+                            Administrator.objects.create(user=user_to_update)
+
+                    user_to_update.save()
+                    messages.success(request, f"User '{username}' updated successfully.")
+                except Exception as e:
+                    messages.error(request, f"Error updating user: {str(e)}")
+
+        # Retrieve all users to display
+        users = User.objects.all()
+        return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
 
 class LogoutManagement(View):
     def get(self, request):
@@ -437,103 +531,7 @@ class course_section_management(View):
         return render(request, 'create_section.html', {"user": request.user})
 
 
-    @login_required
-    def account_management(request):
-        editing_user = None
-
-        if request.method == "POST":
-            action = request.POST.get("action")
-
-            if action == "create":
-                # Handle user creation
-                username = request.POST.get("username")
-                email = request.POST.get("email")
-                password = request.POST.get("password")
-                role = request.POST.get("role")
-
-                try:
-                    # Create the base user
-                    new_user = User.objects.create(
-                        username=username,
-                        email_address=email,
-                        password=make_password(password)
-                    )
-
-                    # Assign role-specific attributes
-                    if role == "ta":
-                        new_user.is_ta = True
-                        TA.objects.create(user=new_user)
-                    elif role == "instructor":
-                        new_user.is_instructor = True
-                        Instructor.objects.create(user=new_user)
-                    elif role == "administrator":
-                        new_user.is_admin = True
-                        Administrator.objects.create(user=new_user)
-                    new_user.save()
-
-                    messages.success(request, f"User '{username}' created successfully.")
-                except Exception as e:
-                    messages.error(request, f"Error creating user: {str(e)}")
-
-            elif action == "delete":
-                # Handle user deletion
-                user_id = request.POST.get("user_id")
-                try:
-                    user_to_delete = get_object_or_404(User, id=user_id)
-                    user_to_delete.delete()
-                    messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
-                except Exception as e:
-                    messages.error(request, f"Error deleting user: {str(e)}")
-
-            elif action == "edit":
-                # Load user data for editing
-                user_id = request.POST.get("user_id")
-                editing_user = get_object_or_404(User, id=user_id)
-
-            elif action == "update":
-                # Handle updating user information
-                user_id = request.POST.get("editing_user_id")
-                username = request.POST.get("username")
-                email = request.POST.get("email")
-                password = request.POST.get("password")
-                role = request.POST.get("role")
-
-                try:
-                    user_to_update = get_object_or_404(User, id=user_id)
-                    user_to_update.username = username
-                    user_to_update.email_address = email
-
-                    # Update password only if provided
-                    if password:
-                        user_to_update.password = make_password(password)
-
-                    # Reset roles
-                    user_to_update.is_ta = False
-                    user_to_update.is_instructor = False
-                    user_to_update.is_admin = False
-
-                    # Assign new role
-                    if role == "ta":
-                        user_to_update.is_ta = True
-                        if not hasattr(user_to_update, "ta_profile"):
-                            TA.objects.create(user=user_to_update)
-                    elif role == "instructor":
-                        user_to_update.is_instructor = True
-                        if not hasattr(user_to_update, "instructor_profile"):
-                            Instructor.objects.create(user=user_to_update)
-                    elif role == "administrator":
-                        user_to_update.is_admin = True
-                        if not hasattr(user_to_update, "administrator_profile"):
-                            Administrator.objects.create(user=user_to_update)
-
-                    user_to_update.save()
-                    messages.success(request, f"User '{username}' updated successfully.")
-                except Exception as e:
-                    messages.error(request, f"Error updating user: {str(e)}")
-
-        # Retrieve all users to display
-        users = User.objects.all()
-        return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
+    
 
 
     def custom_login(request):
