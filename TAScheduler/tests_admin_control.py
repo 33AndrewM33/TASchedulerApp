@@ -445,7 +445,6 @@ class Unit_Admin_Assign_TA_Tests(TestCase):
         with self.assertRaises(ValueError):
             another_lab.assign_ta(self.ta)
 
-
 class Unit_Admin_Assigns_TA_Lab_Lecture(TestCase):
     def setUp(self):
         # Create an admin user
@@ -537,4 +536,123 @@ class Unit_Admin_Assigns_TA_Lab_Lecture(TestCase):
             "ta": self.ta.id,
         })
         self.assertEqual(response.status_code, 404)  # Expect a 404 error
-    
+
+class AcceptanceAdminCourseTests(TestCase):
+    def setUp(self):
+        # Create an admin user
+        User = get_user_model()
+        self.admin_user = User.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
+        # Log in as admin
+        self.client.login(username="admin_user", password="adminpassword")
+
+        # URL for course creation, editing, and deletion
+        self.create_course_url = reverse("course-create")
+        self.course_list_url = reverse("course-list")
+        self.edit_course_url = lambda course_id: reverse("edit-course", args=[course_id])
+
+        # Sample course data
+        self.course_data = {
+            "course_id": "CS101",
+            "semester": "Fall 2024",
+            "name": "Introduction to Computer Science",
+            "description": "A beginner's course in computer science.",
+            "num_of_sections": 3,
+            "modality": "In-person",
+        }
+
+    def test_admin_can_create_course_via_view(self):
+        response = self.client.post(self.create_course_url, self.course_data)
+        self.assertEqual(response.status_code, 302)  # Redirect on success
+        self.assertTrue(Course.objects.filter(course_id="CS101").exists())
+
+    def test_admin_can_edit_course_via_view(self):
+        # Create a course
+        Course.objects.create(**self.course_data)
+
+        # Edit the course via POST request
+        edit_data = {
+            "name": "Updated Course Name",
+            "description": "Updated description.",
+            "num_of_sections": 5,
+        }
+        response = self.client.post(self.edit_course_url("CS101"), edit_data)
+
+        # Assertions
+        self.assertEqual(response.status_code, 302)  # Redirect on success
+        updated_course = Course.objects.get(course_id="CS101")
+        self.assertEqual(updated_course.name, "Updated Course Name")
+        self.assertEqual(updated_course.num_of_sections, 5)
+
+    def test_admin_can_remove_course_via_view(self):
+        # Create a course
+        course = Course.objects.create(**self.course_data)
+
+        # Remove the course via DELETE request or a dedicated endpoint
+        response = self.client.post(reverse("course-delete", args=[course.id]))
+        self.assertEqual(response.status_code, 302)  # Redirect on success
+        self.assertFalse(Course.objects.filter(course_id="CS101").exists())
+
+
+
+class UnitAdminCourseTests(TestCase):
+    def setUp(self):
+        # Create an admin user
+        User = get_user_model()
+        self.admin_user = User.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
+        # Log in as admin
+        self.client.login(username="admin_user", password="adminpassword")
+
+        # Sample course data
+        self.course_data = {
+            "course_id": "CS101",
+            "semester": "Fall 2024",
+            "name": "Introduction to Computer Science",
+            "description": "A beginner's course in computer science.",
+            "num_of_sections": 3,
+            "modality": "In-person",
+        }
+
+    def test_admin_can_create_course(self):
+        course = Course.objects.create(**self.course_data)
+        self.assertEqual(course.course_id, "CS101")
+        self.assertEqual(course.name, "Introduction to Computer Science")
+
+    def test_admin_can_edit_course(self):
+        # Create a course
+        course = Course.objects.create(**self.course_data)
+
+        # Edit the course
+        course.name = "Updated Course Name"
+        course.num_of_sections = 5
+        course.save()
+
+        updated_course = Course.objects.get(course_id="CS101")
+        self.assertEqual(updated_course.name, "Updated Course Name")
+        self.assertEqual(updated_course.num_of_sections, 5)
+
+    def test_admin_can_remove_course(self):
+        # Create a course
+        course = Course.objects.create(**self.course_data)
+
+        # Remove the course
+        course.delete()
+
+        self.assertFalse(Course.objects.filter(course_id="CS101").exists())    

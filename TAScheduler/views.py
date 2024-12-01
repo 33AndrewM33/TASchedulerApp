@@ -80,7 +80,13 @@ class AssignTAToLectureView(View):
 
 
         
-        
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class DeleteCourseView(View):
+    def post(self, request, pk):
+        course = get_object_or_404(Course, id=pk)
+        course.delete()
+        messages.success(request, f"Course {course.name} has been successfully deleted.")
+        return redirect('course-list')  # Adjust the redirect URL as necessary        
     
     
     
