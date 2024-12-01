@@ -7,11 +7,24 @@ urlpatterns = [
     path('', views.custom_login, name='login'),  # Root path for login page
     path('logout/', views.custom_logout, name='logout'),  # Logout
     path('home/', views.home, name='home'),  # Home page
-    path('home/managecourse/', views.manage_course, name='manage_course'),  # Manage courses
-    path('home/managesection/', views.manage_section, name='manage_section'),  # Manage sections
-    path('home/managesection/create/', views.create_section, name='create_section'),  # Create section
-    path('forgot_password/', views.forgot_password, name='forgot_password'),  # Forgot password
-    path('home/accountmanagement/', views.account_management, name='account_management'),  # Account management
-    path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # New edit user route
 
+    # Course Management
+    path('home/managecourse/', views.manage_course, name='manage_course'),  # Manage courses
+    path('home/managecourse/create/', views.create_course, name='create_course'),  # Create course
+    path('home/managecourse/edit/<str:course_id>/', views.edit_course, name='edit_course'),  # Edit course
+    path('home/managecourse/delete/<str:course_id>/', views.delete_course, name='delete_course'),  # Delete course
+
+    # Section Management
+    path('home/managesection/', views.manage_section, name='manage_section'),  # Manage sections
+    path("home/managesection/edit/<int:section_id>/", views.edit_section, name="edit_section"),
+    path("home/managesection/delete/<int:section_id>/", views.delete_section, name="delete_section"),
+
+    path('home/managesection/create/', views.create_section, name='create_section'),  # Create section
+
+    # Account Management
+    path('home/accountmanagement/', views.account_management, name='account_management'),  # Account management
+    path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # Edit user
+
+    # Forgot Password
+    path('forgot_password/', views.forgot_password, name='forgot_password'),  # Forgot password
 ]
