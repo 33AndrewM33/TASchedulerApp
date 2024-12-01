@@ -13,9 +13,19 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True)
 
     # User roles
-    is_admin = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)  # For Administrators
     is_instructor = models.BooleanField(default=False)
     is_ta = models.BooleanField(default=False)
+
+    def get_role(self):
+        """Return the role of the user as a string."""
+        if self.is_admin:
+            return "Administrator"
+        elif self.is_instructor:
+            return "Instructor"
+        elif self.is_ta:
+            return "TA"
+        return "No Role"
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email_address})"

@@ -1,7 +1,12 @@
+<<<<<<< HEAD
+=======
+{% load static %}
+>>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
@@ -17,5 +22,49 @@
             <li><a href="{% url 'logout' %}">Logout</a></li>
         </ul>
     </nav>
+=======
+    <title>Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
+    </header>
+    <nav>
+        <table>
+            <tr>
+                <td>
+                    <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
+                </td>
+            </tr>
+        </table>
+    </nav>
+    <section>
+        <!-- Display success messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="success">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    <footer>
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" class="logout-button" value="Logout">
+        </form>
+    </footer>
+>>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 </body>
 </html>
