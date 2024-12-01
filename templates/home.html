@@ -1,8 +1,28 @@
+<<<<<<< HEAD
+=======
 {% load static %}
+>>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the TA Scheduler</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="{% url 'manage_course' %}">Manage Courses</a></li>
+            <li><a href="{% url 'manage_section' %}">Manage Sections</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+=======
     <title>Home</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -45,5 +65,6 @@
             <input type="submit" class="logout-button" value="Logout">
         </form>
     </footer>
+>>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 </body>
 </html>
