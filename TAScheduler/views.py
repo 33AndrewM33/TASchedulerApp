@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
-from TAScheduler.models import Course, Section, Lab, Lecture
+from TAScheduler.models import TA, Course, Section, Lab, Lecture
 from django.contrib.auth import get_user_model
 
 # Utility function for role checking
@@ -41,7 +41,55 @@ class LogoutManagement(View):
         logout(request)
         return redirect('/')
 
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class AssignTAToLabView(View):
+    def get(self, request, lab_id):
+        lab = get_object_or_404(Lab, id=lab_id)
+        tas = TA.objects.all()
+        return render(request, "assign_ta_to_lab.html", {"lab": lab, "tas": tas})
 
+    def post(self, request, lab_id):
+        lab = get_object_or_404(Lab, id=lab_id)
+        ta_id = request.POST.get("ta")
+        ta = get_object_or_404(TA, id=ta_id)
+
+        # Assign the TA to the lab
+        lab.ta = ta
+        lab.save()
+        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lab {lab_id}.")
+        return redirect("lab-list")
+
+
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class AssignTAToLectureView(View):
+    def get(self, request, lecture_id):
+        lecture = get_object_or_404(Lecture, id=lecture_id)
+        tas = TA.objects.all()
+        return render(request, "assign_ta_to_lecture.html", {"lecture": lecture, "tas": tas})
+
+    def post(self, request, lecture_id):
+        lecture = get_object_or_404(Lecture, id=lecture_id)
+        ta_id = request.POST.get("ta")
+        ta = get_object_or_404(TA, id=ta_id)
+
+        # Assign the TA to the lecture
+        lecture.ta = ta
+        lecture.save()
+        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lecture {lecture_id}.")
+        return redirect("lecture-list")
+
+
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 @method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
 class AccountCreation(View):

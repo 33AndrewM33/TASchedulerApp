@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
 from TAScheduler import views  # Import your custom views
-from TAScheduler.views import AccountCreation, EditCourse, LoginManagement, LogoutManagement, CourseCreation
+from TAScheduler.views import AccountCreation, AssignTAToLabView, AssignTAToLectureView, EditCourse, LoginManagement, LogoutManagement, CourseCreation
 
 
 urlpatterns = [
@@ -40,6 +40,11 @@ urlpatterns = [
 
 
     path("create-account/", AccountCreation.as_view(), name="create-account"),
+    path("labs/<int:lab_id>/assign-ta/", AssignTAToLabView.as_view(), name="assign-ta-to-lab"),
+    path("lectures/<int:lecture_id>/assign-ta/", AssignTAToLectureView.as_view(), name="assign-ta-to-lecture"),
+    path("labs/", lambda request: render(request, "lab_list.html"), name="lab-list"),
+    path("lectures/", lambda request: render(request, "lecture_list.html"), name="lecture-list"),
 ]
+
     
 

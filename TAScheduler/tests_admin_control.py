@@ -1,11 +1,12 @@
 from django.test import TestCase
-from TAScheduler.models import Administrator, Instructor, Course, InstructorToCourse
+from TAScheduler.models import TA, Administrator, Instructor, Course, InstructorToCourse, Lab, Lecture
 from django.urls import reverse
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
+from django.contrib.auth import get_user_model
 
 
-class AdminAssignInstructorToCourseTest(TestCase):
+class UnitAdminAssignInstructorToCourseTest(TestCase):
     def setUp(self):
         # Create an admin user
         self.admin_user = Administrator.objects.create(
@@ -236,3 +237,304 @@ class AdminAssignInstructorToCourseTest(TestCase):
         self.assertFalse(InstructorToCourse.objects.filter(
             instructor=self.instructor1
         ).exists())
+
+class Acceptance_Admin_Creates_Instructor_TA(TestCase):
+    def setUp(self):
+        # Create an admin user
+        User = get_user_model()
+        self.admin_user = User.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
+        # Log in as admin
+        self.client.login(username="admin_user", password="adminpassword")
+
+        # URL for account creation
+        self.create_account_url = reverse("create-account")
+
+    def test_create_ta(self):
+        response = self.client.post(self.create_account_url, {
+            "username": "ta_user",
+            "email_address": "ta@example.com",
+            "password": "tapassword",
+            "first_name": "TA",
+            "last_name": "User",
+            "is_ta": "on",
+        })
+
+        # Assert the response status code
+        self.assertEqual(response.status_code, 302)  # Expect a redirect on success
+
+        # Check the created TA user
+        User = get_user_model()
+        ta_user = User.objects.get(username="ta_user")
+        self.assertTrue(ta_user.is_ta)
+        self.assertEqual(ta_user.email_address, "ta@example.com")
+
+    def test_create_instructor(self):
+        response = self.client.post(self.create_account_url, {
+            "username": "instructor_user",
+            "email_address": "instructor@example.com",
+            "password": "instructorpassword",
+            "first_name": "Instructor",
+            "last_name": "User",
+            "is_instructor": "on",
+        })
+
+        # Assert the response status code
+        self.assertEqual(response.status_code, 302)  # Expect a redirect on success
+
+        # Check the created Instructor user
+        User = get_user_model()
+        instructor_user = User.objects.get(username="instructor_user")
+        self.assertTrue(instructor_user.is_instructor)
+        self.assertEqual(instructor_user.email_address, "instructor@example.com")
+
+class Unit_Admin_Assign_TA_Tests(TestCase):
+    def setUp(self):
+        # Create an admin user
+        self.admin_user = Administrator.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
+        # Create a TA
+        self.ta = TA.objects.create(
+            username="ta_user",
+            email_address="ta@example.com",
+            first_name="TA",
+            last_name="User",
+            is_ta=True,
+        )
+
+        # Create a course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            semester="Fall 2024",
+            name="Intro to CS",
+            description="Basic course on computer science",
+            num_of_sections=2,
+            modality="In-person",
+        )
+
+        # Create a lab and a lecture
+        self.lab = Lab.objects.create(
+            section_id=1,
+            course=self.course,
+            location="Room 101",
+            meeting_time="MWF 10:00-11:00",
+        )
+        self.lecture = Lecture.objects.create(
+            section_id=2,
+            course=self.course,
+            location="Room 202",
+            meeting_time="TTh 1:00-2:30",
+        )
+
+    def test_assign_ta_to_lab_successfully(self):
+        # Assign TA to lab
+        self.lab.ta = self.ta
+        self.lab.save()
+
+        # Verify assignment
+        self.assertEqual(self.lab.ta, self.ta)
+        self.assertTrue(Lab.objects.filter(id=self.lab.id, ta=self.ta).exists())
+
+    def test_assign_ta_to_lecture_successfully(self):
+        # Assign TA to lecture
+        self.lecture.ta = self.ta
+        self.lecture.save()
+
+        # Verify assignment
+        self.assertEqual(self.lecture.ta, self.ta)
+        self.assertTrue(Lecture.objects.filter(id=self.lecture.id, ta=self.ta).exists())
+
+    def test_assign_non_ta_to_lab(self):
+        # Create a non-TA user
+        non_ta = Administrator.objects.create(
+            username="non_ta_user",
+            email_address="non_ta@example.com",
+            first_name="Non",
+            last_name="TA",
+        )
+
+        # Attempt to assign non-TA to lab
+        with self.assertRaises(ValueError):
+            self.lab.ta = non_ta
+            self.lab.save()
+
+    def test_assign_ta_to_nonexistent_lab(self):
+        with self.assertRaises(Lab.DoesNotExist):
+            Lab.objects.get(id=999).ta = self.ta
+
+    def test_remove_ta_from_lab(self):
+        # Assign TA to lab
+        self.lab.ta = self.ta
+        self.lab.save()
+
+        # Remove TA assignment
+        self.lab.ta = None
+        self.lab.save()
+
+        # Verify removal
+        self.assertIsNone(self.lab.ta)
+        self.assertFalse(Lab.objects.filter(id=self.lab.id, ta=self.ta).exists())
+
+    def test_remove_ta_with_protected_constraint(self):
+        # Assign TA to lab
+        self.lab.ta = self.ta
+        self.lab.save()
+
+        # Attempt to delete the TA directly
+        with self.assertRaises(ProtectedError):
+            self.ta.delete()
+
+        # Verify the TA and lab assignment still exist
+        self.assertTrue(TA.objects.filter(id=self.ta.id).exists())
+        self.assertTrue(Lab.objects.filter(id=self.lab.id, ta=self.ta).exists())
+
+
+    def test_assign_ta_to_multiple_labs(self):
+        # Create another lab
+        another_lab = Lab.objects.create(
+            section_id=3,
+            course=self.course,
+            location="Room 303",
+            meeting_time="MW 3:00-4:00",
+        )
+
+        # Assign TA to both labs
+        self.lab.ta = self.ta
+        self.lab.save()
+
+        another_lab.ta = self.ta
+        another_lab.save()
+
+        # Verify assignments
+        self.assertEqual(self.lab.ta, self.ta)
+        self.assertEqual(another_lab.ta, self.ta)
+
+    def test_assign_ta_with_max_assignments_exceeded(self):
+        # Simulate the TA already having the maximum number of assignments
+        self.ta.max_assignments = 1
+        self.ta.save()
+
+        # Assign TA to the first lab
+        self.lab.ta = self.ta
+        self.lab.save()
+
+        # Attempt to assign the TA to another lab
+        another_lab = Lab.objects.create(
+            section_id=3,
+            course=self.course,
+            location="Room 303",
+            meeting_time="MW 3:00-4:00",
+        )
+
+        with self.assertRaises(ValueError):
+            another_lab.assign_ta(self.ta)
+
+
+class Unit_Admin_Assigns_TA_Lab_Lecture(TestCase):
+    def setUp(self):
+        # Create an admin user
+        self.admin = Administrator.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin.set_password("adminpassword")
+        self.admin.save()
+
+        # Log in as admin
+        self.client.login(username="admin_user", password="adminpassword")
+
+        # Create a TA
+        self.ta = TA.objects.create(
+            username="ta_user",
+            email_address="ta@example.com",
+            first_name="Test",
+            last_name="TA",
+            is_ta=True,
+            grader_status=True,
+        )
+
+        # Create a course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            semester="Fall 2024",
+            name="Introduction to Computer Science",
+            description="A beginner's course in computer science.",
+            num_of_sections=3,
+            modality="In-person",
+        )
+
+        # Create a lab
+        self.lab = Lab.objects.create(
+            section_id=1,
+            course=self.course,
+            location="Room 101",
+            meeting_time="Monday 10AM",
+        )
+
+        # Create a lecture
+        self.lecture = Lecture.objects.create(
+            section_id=2,
+            course=self.course,
+            location="Room 102",
+            meeting_time="Tuesday 2PM",
+        )
+
+    def test_admin_assign_ta_to_lab(self):
+        response = self.client.post(reverse("assign-ta-to-lab", args=[self.lab.id]), {
+            "ta": self.ta.id,
+        })
+        self.lab.refresh_from_db()
+        self.assertEqual(response.status_code, 302)  # Redirect on success
+        self.assertEqual(self.lab.ta, self.ta)  # Ensure the TA was assigned
+
+    def test_admin_assign_ta_to_lecture(self):
+        response = self.client.post(reverse("assign-ta-to-lecture", args=[self.lecture.id]), {
+            "ta": self.ta.id,
+        })
+        self.lecture.refresh_from_db()
+        self.assertEqual(response.status_code, 302)  # Redirect on success
+        self.assertEqual(self.lecture.ta, self.ta)  # Ensure the TA was assigned
+
+    def test_assign_invalid_ta_to_lab(self):
+        response = self.client.post(reverse("assign-ta-to-lab", args=[self.lab.id]), {
+            "ta": 999,  # Non-existent TA ID
+        })
+        self.assertEqual(response.status_code, 404)  # Expect a 404 error
+
+    def test_assign_invalid_ta_to_lecture(self):
+        response = self.client.post(reverse("assign-ta-to-lecture", args=[self.lecture.id]), {
+            "ta": 999,  # Non-existent TA ID
+        })
+        self.assertEqual(response.status_code, 404)  # Expect a 404 error
+
+    def test_admin_assign_ta_to_nonexistent_lab(self):
+        response = self.client.post(reverse("assign-ta-to-lab", args=[999]), {
+            "ta": self.ta.id,
+        })
+        self.assertEqual(response.status_code, 404)  # Expect a 404 error
+
+    def test_admin_assign_ta_to_nonexistent_lecture(self):
+        response = self.client.post(reverse("assign-ta-to-lecture", args=[999]), {
+            "ta": self.ta.id,
+        })
+        self.assertEqual(response.status_code, 404)  # Expect a 404 error
+    

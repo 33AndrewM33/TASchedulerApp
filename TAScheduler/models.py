@@ -121,15 +121,31 @@ class Section(models.Model):
 
 
 class Lab(Section):  # Lab inherits from Section
-    ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="assigned_labs")
+    ta = models.ForeignKey(
+        TA,
+        on_delete=models.PROTECT,  # Prevent deletion if related assignments exist
+        null=True,
+        related_name="assigned_labs"  # Unique related name for Lab
+    )
 
+    def assign_ta(self, ta):
+        if ta.assigned_labs.count() >= ta.max_assignments:
+            raise ValueError(f"TA {ta.first_name} {ta.last_name} has exceeded the maximum number of assignments.")
+        self.ta = ta
+        self.save()
+        
     def __str__(self):
         return f"Lab: {self.section_id} - {self.course}"
 
 
 class Lecture(Section):  # Lecture inherits from Section
     instructor = models.ForeignKey(Instructor, on_delete=models.SET_NULL, null=True, related_name="assigned_lectures")
-    ta = models.ForeignKey(TA, on_delete=models.SET_NULL, null=True, related_name="grading_lectures")
+    ta = models.ForeignKey(
+        TA,
+        on_delete=models.PROTECT,  # Prevent deletion if related assignments exist
+        null=True,
+        related_name="grading_lectures"  # Unique related name for Lecture
+    )
 
     def __str__(self):
         return f"Lecture: {self.section_id} - {self.course}"
