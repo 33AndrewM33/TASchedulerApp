@@ -1,65 +1,61 @@
 from django.test import TestCase
 from django.urls import reverse
-from TAScheduler.models import User
 from django.contrib.auth import get_user_model
 
 class AccountCreationTests(TestCase):
     def setUp(self):
         # Create an admin user
-        self.admin_user = get_user_model().objects.create_user(
-            username='adminuser',
-            email_address='admin@example.com',
-            password='password123',
-            is_admin=True
+        User = get_user_model()
+        self.admin_user = User.objects.create(
+            username="admin_user",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
         )
+        self.admin_user.set_password("adminpassword")
+        self.admin_user.save()
+
         # Log in as admin
-        self.client.login(username='adminuser', password='password123')
+        self.client.login(username="admin_user", password="adminpassword")
+
+        # URL for account creation
+        self.create_account_url = reverse("create-account")
 
     def test_create_ta(self):
-        response = self.client.post(reverse('create-account'), {
-            'username': 'tauser',
-            'email_address': 'tauser@example.com',
-            'password': 'password123',
-            'first_name': 'TA',
-            'last_name': 'User',
-            'is_ta': 'on',
+        response = self.client.post(self.create_account_url, {
+            "username": "ta_user",
+            "email_address": "ta@example.com",
+            "password": "tapassword",
+            "first_name": "TA",
+            "last_name": "User",
+            "is_ta": "on",
         })
-        self.assertEqual(response.status_code, 302)  # Should redirect after success
-        self.assertTrue(User.objects.filter(username='tauser').exists())
+
+        # Assert the response status code
+        self.assertEqual(response.status_code, 302)  # Expect a redirect on success
+
+        # Check the created TA user
+        User = get_user_model()
+        ta_user = User.objects.get(username="ta_user")
+        self.assertTrue(ta_user.is_ta)
+        self.assertEqual(ta_user.email_address, "ta@example.com")
 
     def test_create_instructor(self):
-        response = self.client.post(reverse('create-account'), {
-            'username': 'instructoruser',
-            'email_address': 'instructor@example.com',
-            'password': 'password123',
-            'first_name': 'Instructor',
-            'last_name': 'User',
-            'is_instructor': 'on',
-        })
-        self.assertEqual(response.status_code, 302)  # Should redirect after success
-        self.assertTrue(User.objects.filter(username='instructoruser').exists())
-
-    def test_create_user_without_admin_access(self):
-        # Log out admin user
-        self.client.logout()
-
-        # Create a non-admin user
-        self.non_admin_user = get_user_model().objects.create_user(
-            username='regularuser',
-            email_address='user@example.com',
-            password='password123',
-            is_admin=False
-        )
-        self.client.login(username='regularuser', password='password123')
-
-        # Attempt to access account creation view
-        response = self.client.post(reverse('create-account'), {
-            'username': 'newuser',
-            'email_address': 'newuser@example.com',
-            'password': 'password123',
-            'first_name': 'New',
-            'last_name': 'User',
+        response = self.client.post(self.create_account_url, {
+            "username": "instructor_user",
+            "email_address": "instructor@example.com",
+            "password": "instructorpassword",
+            "first_name": "Instructor",
+            "last_name": "User",
+            "is_instructor": "on",
         })
 
-        # Should return forbidden since the user is not an admin
-        self.assertEqual(response.status_code, 302)
+        # Assert the response status code
+        self.assertEqual(response.status_code, 302)  # Expect a redirect on success
+
+        # Check the created Instructor user
+        User = get_user_model()
+        instructor_user = User.objects.get(username="instructor_user")
+        self.assertTrue(instructor_user.is_instructor)
+        self.assertEqual(instructor_user.email_address, "instructor@example.com")

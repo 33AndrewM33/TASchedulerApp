@@ -141,8 +141,16 @@ class TAToCourse(models.Model):
 
 
 class InstructorToCourse(models.Model):
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="course_assignments")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="instructor_assignments")
+    instructor = models.ForeignKey(
+        Instructor, 
+        on_delete=models.PROTECT,  # Prevent deletion if related assignments exist
+        related_name="course_assignments"
+    )
+    course = models.ForeignKey(
+        Course, 
+        on_delete=models.CASCADE,  # Keep cascade behavior for courses
+        related_name="instructor_assignments"
+    )
 
     class Meta:
         constraints = [
@@ -151,3 +159,4 @@ class InstructorToCourse(models.Model):
                 name="unique_instructor_course"
             )
         ]
+

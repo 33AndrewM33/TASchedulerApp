@@ -8,6 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from TAScheduler.models import Course, Section, Lab, Lecture
+from django.contrib.auth import get_user_model
 
 # Utility function for role checking
 def is_admin_or_instructor(user):
@@ -41,12 +42,17 @@ class LogoutManagement(View):
         return redirect('/')
 
 
+
 @method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
-        return render(request, "create_account.html")  # Ensure the template exists
+        # Render the account creation form
+        return render(request, "create_account.html")
 
     def post(self, request):
+        User = get_user_model()  # Retrieve the custom user model
+
+        # Get data from the POST request
         username = request.POST.get("username")
         email_address = request.POST.get("email_address")
         password = request.POST.get("password")
@@ -54,26 +60,44 @@ class AccountCreation(View):
         last_name = request.POST.get("last_name")
         home_address = request.POST.get("home_address", "")
         phone_number = request.POST.get("phone_number", "")
-        is_admin = request.POST.get("is_admin", False) == "on"
-        is_instructor = request.POST.get("is_instructor", False) == "on"
-        is_ta = request.POST.get("is_ta", False) == "on"
+        is_admin = request.POST.get("is_admin") == "on"
+        is_instructor = request.POST.get("is_instructor") == "on"
+        is_ta = request.POST.get("is_ta") == "on"
 
+        # Validate required fields
         if not all([username, email_address, password, first_name, last_name]):
-            return HttpResponseBadRequest("Missing required fields")
+            messages.error(request, "All fields are required.")
+            return redirect("create-account")
 
-        User.objects.create_user(
-            username=username,
-            email=email_address,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            home_address=home_address,
-            phone_number=phone_number,
-            is_admin=is_admin,
-            is_instructor=is_instructor,
-            is_ta=is_ta
-        )
-        return redirect("home")  # Redirect after success
+        # Check for duplicate username or email
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect("create-account")
+        if User.objects.filter(email_address=email_address).exists():
+            messages.error(request, "Email address already exists.")
+            return redirect("create-account")
+
+        # Create the user
+        try:
+            user = User.objects.create(
+                username=username,
+                email_address=email_address,
+                first_name=first_name,
+                last_name=last_name,
+                home_address=home_address,
+                phone_number=phone_number,
+                is_admin=is_admin,
+                is_instructor=is_instructor,
+                is_ta=is_ta
+            )
+            user.set_password(password)  # Hash the password
+            user.save()
+            messages.success(request, "Account created successfully.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect("home")
+
 
 
 @method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
