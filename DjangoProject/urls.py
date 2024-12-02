@@ -20,7 +20,7 @@ urlpatterns = [
     path('home/managesection/create/', SectionCreation.as_view(), name='create_section'),  # Create section
 
     # Course Editing and Creation
-    path("courses/<str:course_id>/edit/", EditCourse.as_view(), name="edit-course"),  # Edit course
+    path("home/managecourse/edit/<str:course_id>/", EditCourse.as_view(), name="edit_course"),
     path('courses/create/', CourseCreation.as_view(), name='course-create'),  # Create course
     path('courses/', CourseCreation.as_view(), name='course-list'),  # List courses
     path('courses/<int:pk>/delete/', DeleteCourseView.as_view(), name='course-delete'),  # Delete course

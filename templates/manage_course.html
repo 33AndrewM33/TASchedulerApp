@@ -54,7 +54,7 @@
                     <td>{{ course.modality }}</td>
                     <td>{{ course.num_of_sections }}</td>
                     <td>
-                        <a href="{% url 'edit-course' course.course_id %}" class="btn btn-edit">Edit</a>
+                        <a href="{% url 'edit_course' course.course_id %}" class="btn btn-edit">Edit</a>
                         <form method="POST" action="{% url 'course-delete' course.pk %}" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" onclick="return confirm('Are you sure?')" class="btn btn-delete">Delete</button>
@@ -68,6 +68,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        
 
         <!-- Create New Course Button -->
         <a href="{% url 'course-create' %}" class="btn btn-create highlighted-button">Create New Course</a>

@@ -264,21 +264,35 @@ class CourseCreation(View):
         )
         return redirect("course-list")  # Redirect after success
 
-@method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
+@method_decorator(login_required, name="dispatch")
 class EditCourse(View):
-    def post(self, request, course_id):
+    def get(self, request, course_id):
+        # Fetch the course to edit
         course = get_object_or_404(Course, course_id=course_id)
+        return render(request, "edit_course.html", {"course": course})
 
-        # Check user permissions explicitly
-        if request.user.is_admin or request.user.is_instructor:
-            # Update course fields only if permission is granted
-            course.name = request.POST.get("name", course.name)
-            course.description = request.POST.get("description", course.description)
-            course.num_of_sections = request.POST.get("num_of_sections", course.num_of_sections)
+    def post(self, request, course_id):
+        # Handle course update
+        course = get_object_or_404(Course, course_id=course_id)
+        name = request.POST.get("name")
+        semester = request.POST.get("semester")
+        modality = request.POST.get("modality")
+        num_of_sections = request.POST.get("num_of_sections")
+        description = request.POST.get("description")
+
+        # Update course details
+        try:
+            course.name = name
+            course.semester = semester
+            course.modality = modality
+            course.num_of_sections = num_of_sections
+            course.description = description
             course.save()
-            return redirect("course-list")  # Redirect after editing
-        else:
-            return HttpResponseForbidden("You do not have permission to edit this course.")
+            messages.success(request, f"Course {course.course_id} updated successfully!")
+            return redirect("manage_course")  # Redirect back to course management
+        except Exception as e:
+            messages.error(request, f"An error occurred while updating the course: {str(e)}")
+            return render(request, "edit_course.html", {"course": course})
         
 @method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
 class DeleteCourseView(View):
