@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models.deletion import ProtectedError
 
 
+
 class AssignInstructorToCourseTest(TestCase):
         def setUp(self):
             # Create instructor users

@@ -1,54 +1,90 @@
-<<<<<<< HEAD
-=======
 {% load static %}
->>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #1e90ff, #00008b);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            margin-bottom: 50px;
+        }
+        h1, h2 {
+            margin: 10px 0;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            margin: 30px 0;
+        }
+        nav a {
+            text-decoration: none;
+            font-size: 18px;
+            padding: 10px 20px;
+            color: white;
+            background-color: #1e90ff;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        nav a:hover {
+            background-color: #4169e1;
+        }
+        .logout-container {
+            margin-left: 80px; /* Adds space between the main buttons and the logout button */
+        }
+        .logout-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #ff4500;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .logout-button:hover {
+            background-color: #ff6347;
+        }
+        .messages {
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #32cd32;
+            border-radius: 5px;
+            color: black;
+            width: fit-content;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>Welcome to the TA Scheduler</h1>
+        <h2>Welcome, {{ user.first_name }} {{ user.last_name }}!</h2>
     </header>
 
     <nav>
-        <ul>
-            <li><a href="{% url 'manage_course' %}">Manage Courses</a></li>
-            <li><a href="{% url 'manage_section' %}">Manage Sections</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        </ul>
+        <a href="{% url 'account_management' %}">Account Management</a>
+        <a href="{% url 'manage_course' %}">Course Management</a>
+        <a href="{% url 'manage_section' %}">Section Management</a>
+        <div class="logout-container">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="logout-button" value="Logout">
+            </form>
+        </div>
     </nav>
-=======
-    <title>Home</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-    <header>
-        <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
-    </header>
-    <nav>
-        <table>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
-                </td>
-            </tr>
-        </table>
-    </nav>
+
     <section>
         <!-- Display success messages -->
         {% if messages %}
@@ -59,12 +95,5 @@
         </div>
         {% endif %}
     </section>
-    <footer>
-        <form action="{% url 'logout' %}" method="post">
-            {% csrf_token %}
-            <input type="submit" class="logout-button" value="Logout">
-        </form>
-    </footer>
->>>>>>> f24c949f1502502c198c46c32b732524c1507a70
 </body>
 </html>

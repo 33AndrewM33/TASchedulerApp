@@ -9,7 +9,6 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.contrib.auth import get_user_model
 from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
 
-
 # Utility function for role checking
 def is_admin_or_instructor(user):
     return user.is_admin or user.is_instructor
@@ -112,67 +111,6 @@ def account_management(request):
         users = User.objects.all()
         return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
 
-class LogoutManagement(View):
-    def get(self, request):
-        logout(request)
-        return redirect('/')
-
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
-class AssignTAToLabView(View):
-    def get(self, request, lab_id):
-        lab = get_object_or_404(Lab, id=lab_id)
-        tas = TA.objects.all()
-        return render(request, "assign_ta_to_lab.html", {"lab": lab, "tas": tas})
-
-    def post(self, request, lab_id):
-        lab = get_object_or_404(Lab, id=lab_id)
-        ta_id = request.POST.get("ta")
-        ta = get_object_or_404(TA, id=ta_id)
-
-        # Assign the TA to the lab
-        lab.ta = ta
-        lab.save()
-        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lab {lab_id}.")
-        return redirect("lab-list")
-
-
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
-class AssignTAToLectureView(View):
-    def get(self, request, lecture_id):
-        lecture = get_object_or_404(Lecture, id=lecture_id)
-        tas = TA.objects.all()
-        return render(request, "assign_ta_to_lecture.html", {"lecture": lecture, "tas": tas})
-
-    def post(self, request, lecture_id):
-        lecture = get_object_or_404(Lecture, id=lecture_id)
-        ta_id = request.POST.get("ta")
-        ta = get_object_or_404(TA, id=ta_id)
-
-        # Assign the TA to the lecture
-        lecture.ta = ta
-        lecture.save()
-        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lecture {lecture_id}.")
-        return redirect("lecture-list")
-
-
-        
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
-class DeleteCourseView(View):
-    def post(self, request, pk):
-        course = get_object_or_404(Course, id=pk)
-        course.delete()
-        messages.success(request, f"Course {course.name} has been successfully deleted.")
-        return redirect('course-list')  # Adjust the redirect URL as necessary        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
 @method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
@@ -228,23 +166,75 @@ class AccountCreation(View):
 
         return redirect("home")
 
+class LoginManagement(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('/home/')
+        return render(request, "login.html")
 
+    def post(self, request):
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
 
-@method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
-class EditCourse(View):
-    def post(self, request, course_id):
-        course = get_object_or_404(Course, course_id=course_id)
-
-        # Check user permissions explicitly
-        if request.user.is_admin or request.user.is_instructor:
-            # Update course fields only if permission is granted
-            course.name = request.POST.get("name", course.name)
-            course.description = request.POST.get("description", course.description)
-            course.num_of_sections = request.POST.get("num_of_sections", course.num_of_sections)
-            course.save()
-            return redirect("course-list")  # Redirect after editing
+        if user is not None:
+            login(request, user)
+            return redirect('/home/')  # Redirect to home page after successful login
         else:
-            return HttpResponseForbidden("You do not have permission to edit this course.")
+            return render(request, "login.html", {"error": "Invalid username or password"})
+
+class LogoutManagement(View):
+    def get(self, request):
+        logout(request)
+        return redirect('/')
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect('/')  # Redirect to login page
+
+
+# TA Views
+
+
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class AssignTAToLabView(View):
+    def get(self, request, lab_id):
+        lab = get_object_or_404(Lab, id=lab_id)
+        tas = TA.objects.all()
+        return render(request, "assign_ta_to_lab.html", {"lab": lab, "tas": tas})
+
+    def post(self, request, lab_id):
+        lab = get_object_or_404(Lab, id=lab_id)
+        ta_id = request.POST.get("ta")
+        ta = get_object_or_404(TA, id=ta_id)
+
+        # Assign the TA to the lab
+        lab.ta = ta
+        lab.save()
+        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lab {lab_id}.")
+        return redirect("lab-list")
+
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class AssignTAToLectureView(View):
+    def get(self, request, lecture_id):
+        lecture = get_object_or_404(Lecture, id=lecture_id)
+        tas = TA.objects.all()
+        return render(request, "assign_ta_to_lecture.html", {"lecture": lecture, "tas": tas})
+
+    def post(self, request, lecture_id):
+        lecture = get_object_or_404(Lecture, id=lecture_id)
+        ta_id = request.POST.get("ta")
+        ta = get_object_or_404(TA, id=ta_id)
+
+        # Assign the TA to the lecture
+        lecture.ta = ta
+        lecture.save()
+        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lecture {lecture_id}.")
+        return redirect("lecture-list")
+
+
+# Course Views
 
 
 @method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
@@ -274,16 +264,42 @@ class CourseCreation(View):
         )
         return redirect("course-list")  # Redirect after success
 
+@method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
+class EditCourse(View):
+    def post(self, request, course_id):
+        course = get_object_or_404(Course, course_id=course_id)
 
+        # Check user permissions explicitly
+        if request.user.is_admin or request.user.is_instructor:
+            # Update course fields only if permission is granted
+            course.name = request.POST.get("name", course.name)
+            course.description = request.POST.get("description", course.description)
+            course.num_of_sections = request.POST.get("num_of_sections", course.num_of_sections)
+            course.save()
+            return redirect("course-list")  # Redirect after editing
+        else:
+            return HttpResponseForbidden("You do not have permission to edit this course.")
+        
+@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+class DeleteCourseView(View):
+    def post(self, request, pk):
+        course = get_object_or_404(Course, id=pk)
+        course.delete()
+        messages.success(request, f"Course {course.name} has been successfully deleted.")
+        return redirect('course-list')  # Adjust the redirect URL as necessary        
+    
 @login_required
 def manage_course(request):
     return render(request, 'manage_course.html', {"user": request.user})
 
 
+
+
+# Section Views
+
 @login_required
 def manage_section(request):
     return render(request, 'manage_section.html', {"user": request.user})
-
 
 @login_required
 def create_section(request):
@@ -338,11 +354,6 @@ def create_section(request):
     # Render the form again if the method is GET or POST fails
     return render(request, "create_section.html", {"user": request.user})
 
-
-
-def custom_logout(request):
-    logout(request)
-    return redirect('/')  # Redirect to login page
 
 
 @login_required
@@ -465,9 +476,11 @@ def edit_user(request, user_id):
 
 class course_section_management(View):
     @login_required
+    @user_passes_test(lambda u: u.is_staff or u.is_superuser)
     def manage_course(request):
-        # Add logic for managing courses here
         return render(request, 'manage_course.html', {"user": request.user})
+
+
 
 
     @login_required
@@ -554,22 +567,119 @@ class course_section_management(View):
             return render(request, 'home.html')
 
 
-class LoginManagement(View):
+
+
+
+@method_decorator(login_required, name="dispatch")
+class CourseManagement(View):
     def get(self, request):
-        if request.user.is_authenticated:
-            return redirect('/home/')
-        return render(request, "login.html")
+        # Fetch all courses and pass them to the template
+        courses = Course.objects.all()
+        return render(request, "manage_course.html", {"courses": courses})
 
     def post(self, request):
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
+        # Determine the action based on the form
+        action = request.POST.get("action")
 
-        if user is not None:
-            login(request, user)
-            return redirect('/home/')  # Redirect to home page after successful login
-        else:
-            return render(request, "login.html", {"error": "Invalid username or password"})
+        if action == "create":
+            # Extract form data for course creation
+            course_id = request.POST.get("course_id")
+            name = request.POST.get("name")
+            description = request.POST.get("description")
+            semester = request.POST.get("semester")
+            modality = request.POST.get("modality")
+
+            # Validate required fields
+            if not all([course_id, name, semester, modality]):
+                messages.error(request, "All fields are required.")
+                return redirect("manage_course")
+
+            try:
+                # Create the new course
+                Course.objects.create(
+                    course_id=course_id,
+                    name=name,
+                    description=description,
+                    semester=semester,
+                    modality=modality,
+                )
+                messages.success(request, "Course created successfully.")
+            except Exception as e:
+                messages.error(request, f"An error occurred while creating the course: {e}")
+
+        elif action == "delete":
+            # Handle course deletion
+            course_id = request.POST.get("course_id")
+            try:
+                # Fetch and delete the course
+                course = Course.objects.get(course_id=course_id)
+                course.delete()
+                messages.success(request, "Course deleted successfully.")
+            except Course.DoesNotExist:
+                messages.error(request, "Course not found.")
+            except Exception as e:
+                messages.error(request, f"An error occurred while deleting the course: {e}")
+
+        return redirect("manage_course")
 
 
+@method_decorator(login_required, name="dispatch")
+class SectionManagement(View):
+    def get(self, request):
+        # Display all sections
+        sections = Section.objects.all()
+        return render(request, "manage_section.html", {"sections": sections, "user": request.user})
 
+    def post(self, request):
+        action = request.POST.get("action")
+        if action == "delete":
+            section_id = request.POST.get("section_id")
+            try:
+                section = get_object_or_404(Section, section_id=section_id)
+                section.delete()
+                messages.success(request, "Section deleted successfully.")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect("manage_section")
+
+
+@method_decorator(login_required, name="dispatch")
+class SectionCreation(View):
+    def get(self, request):
+        # Render the section creation form
+        return render(request, "create_section.html", {"user": request.user})
+
+    def post(self, request):
+        # Handle section creation
+        course_id = request.POST.get("course_id")
+        section_id = request.POST.get("section_id")
+        section_type = request.POST.get("section_type")
+        location = request.POST.get("location")
+        meeting_time = request.POST.get("meeting_time")
+
+        try:
+            course = get_object_or_404(Course, course_id=course_id)
+            if Section.objects.filter(section_id=section_id, course=course).exists():
+                messages.error(request, "Section with this ID already exists for the course.")
+            else:
+                # Create section
+                section = Section.objects.create(
+                    section_id=section_id,
+                    course=course,
+                    location=location,
+                    meeting_time=meeting_time,
+                )
+
+                if section_type.lower() == "lab":
+                    Lab.objects.create(section=section)
+                elif section_type.lower() == "lecture":
+                    Lecture.objects.create(section=section)
+
+                messages.success(request, f"{section_type.capitalize()} section created successfully.")
+        except Course.DoesNotExist:
+            messages.error(request, "Course does not exist.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect("manage_section")
