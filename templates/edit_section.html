@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Section</title>
+</head>
+<body>
+    <h1>Edit Section</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" value="{{ section.location }}" required><br><br>
+
+        <label for="meeting_time">Meeting Time:</label>
+        <input type="text" id="meeting_time" name="meeting_time" value="{{ section.meeting_time }}" required><br><br>
+
+        <label for="section_type">Section Type:</label>
+        <select id="section_type" name="section_type">
+            <option value="lab" {% if section_type == "lab" %}selected{% endif %}>Lab</option>
+            <option value="lecture" {% if section_type == "lecture" %}selected{% endif %}>Lecture</option>
+        </select><br><br>
+
+        {% if section_type == "lab" %}
+            <label for="ta">Assign TA:</label>
+            <select id="ta" name="ta">
+                <option value="">Unassigned</option>
+                {% for ta in tas %}
+                    <option value="{{ ta.id }}" {% if section.ta and section.ta.id == ta.id %}selected{% endif %}>
+                        {{ ta.first_name }} {{ ta.last_name }}
+                    </option>
+                {% endfor %}
+            </select><br><br>
+        {% elif section_type == "lecture" %}
+            <label for="instructor">Assign Instructor:</label>
+            <select id="instructor" name="instructor">
+                <option value="">Unassigned</option>
+                {% for instructor in instructors %}
+                    <option value="{{ instructor.id }}" {% if section.instructor and section.instructor.id == instructor.id %}selected{% endif %}>
+                        {{ instructor.first_name }} {{ instructor.last_name }}
+                    </option>
+                {% endfor %}
+            </select><br><br>
+        {% endif %}
+
+        <button type="submit">Update Section</button>
+    </form>
+</body>
+</html>
