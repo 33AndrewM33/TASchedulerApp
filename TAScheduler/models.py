@@ -1,31 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
-
-# ----------------------------------------
-# Custom User Manager
-# ----------------------------------------
-class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email_address, password=None, **extra_fields):
-        if not email_address:
-            raise ValueError("The Email Address field must be set")
-        email_address = self.normalize_email(email_address)
-        user = self.model(username=username, email_address=email_address, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, username, email_address, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self.create_user(username, email_address, password, **extra_fields)
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 
 
 # ----------------------------------------
@@ -48,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    objects = CustomUserManager()
+    objects = UserManager()  # Use Django's built-in manager
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email_address']

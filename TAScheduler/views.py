@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
+from TAScheduler.models import User
 
 # ----------------------------------------
 # Section Management Views
