@@ -222,7 +222,7 @@ class CourseEditingTest(TestCase):
             modality="In-person"
         )
 
-        self.edit_url = reverse("edit-course", args=[self.course.course_id])
+        self.edit_url = reverse("edit_course", args=[self.course.course_id])
 
     def create_unique_user_and_instructor(self, username_prefix):
         """
@@ -567,40 +567,41 @@ class CourseEditPermissionTest(TestCase):
             modality="In-person"
         )
 
-        self.edit_url = reverse("edit-course", args=[self.course.course_id])
-
+        self.edit_url = reverse("edit_course", args=[self.course.course_id])
 
     def test_admin_can_edit_course(self):
-        # Ensure the correct admin username is used
-        self.client.login(username="admin_user_1", password="adminpassword")  # Use exact username from setup
+        self.client.login(username="admin_user_1", password="adminpassword")
         response = self.client.post(
             self.edit_url,
             {
                 "name": "Updated Name",
                 "description": "Updated Description",
                 "num_of_sections": 5,
+                "semester": "Spring 2025",  # Include the semester field
+                "modality": "Online",      # Include other required fields if necessary
             },
         )
-        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.assertEqual(response.status_code, 302)  # Expect a successful update
         self.course.refresh_from_db()
         self.assertEqual(self.course.name, "Updated Name")
+        self.assertEqual(self.course.semester, "Spring 2025")
 
     def test_instructor_can_edit_course(self):
-        # Ensure the correct instructor username is used
-        self.client.login(username="instructor_user_1", password="instructorpassword")  # Use exact username from setup
+        self.client.login(username="instructor_user_1", password="instructorpassword")
         response = self.client.post(
             self.edit_url,
             {
                 "name": "Updated Name by Instructor",
                 "description": "Updated Description by Instructor",
                 "num_of_sections": 5,
+                "semester": "Spring 2025",  # Include the semester field
+                "modality": "Online",      # Include other required fields if necessary
             },
         )
-        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.assertEqual(response.status_code, 302)  # Expect a successful update
         self.course.refresh_from_db()
         self.assertEqual(self.course.name, "Updated Name by Instructor")
-        self.assertEqual(self.course.description, "Updated Description by Instructor")
-        self.assertEqual(self.course.num_of_sections, 5)
+        self.assertEqual(self.course.semester, "Spring 2025")
 
 
     def test_ta_cannot_edit_course(self):

@@ -557,7 +557,7 @@ class AcceptanceAdminCourseTests(TestCase):
         # URL for course creation, editing, and deletion
         self.create_course_url = reverse("course-create")
         self.course_list_url = reverse("course-list")
-        self.edit_course_url = lambda course_id: reverse("edit-course", args=[course_id])
+        self.edit_course_url = lambda course_id: reverse("edit_course", args=[course_id])
 
         # Sample course data
         self.course_data = {
@@ -583,6 +583,8 @@ class AcceptanceAdminCourseTests(TestCase):
             "name": "Updated Course Name",
             "description": "Updated description.",
             "num_of_sections": 5,
+            "semester": "Fall 2024",  # Include the semester field
+            "modality": "In-person",  # Include other required fields if necessary
         }
         response = self.client.post(self.edit_course_url("CS101"), edit_data)
 
@@ -591,6 +593,8 @@ class AcceptanceAdminCourseTests(TestCase):
         updated_course = Course.objects.get(course_id="CS101")
         self.assertEqual(updated_course.name, "Updated Course Name")
         self.assertEqual(updated_course.num_of_sections, 5)
+        self.assertEqual(updated_course.semester, "Fall 2024")
+
 
     def test_admin_can_remove_course_via_view(self):
         # Create a course
