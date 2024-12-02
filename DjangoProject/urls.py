@@ -5,7 +5,7 @@ from TAScheduler import views
 from TAScheduler.views import (
     AccountCreation, AssignTAToLabView, AssignTAToLectureView, CourseCreation, 
     CourseManagement, DeleteCourseView, EditCourse, LoginManagement, 
-    LogoutManagement, SectionCreation, SectionManagement
+    LogoutManagement, SectionCreation, SectionManagement, AccountManagement
 )
 
 urlpatterns = [
@@ -35,7 +35,7 @@ urlpatterns = [
 
     # Account Management
     path("create-account/", AccountCreation.as_view(), name="create-account"),
-    path('home/accountmanagement/', views.account_management, name='account_management'),
+    path('home/accountmanagement/', AccountManagement.as_view(), name='account_management'),
     path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # Edit user
 
     # Forgot Password
