@@ -29,7 +29,7 @@ class AccountCreationTests(TestCase):
             "password": "tapassword",
             "first_name": "TA",
             "last_name": "User",
-            "is_ta": "on",
+            "role": "ta",
         })
 
         # Assert the response status code
@@ -48,7 +48,7 @@ class AccountCreationTests(TestCase):
             "password": "instructorpassword",
             "first_name": "Instructor",
             "last_name": "User",
-            "is_instructor": "on",
+            "role": "instructor",
         })
 
         # Assert the response status code

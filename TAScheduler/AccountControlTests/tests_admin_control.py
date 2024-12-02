@@ -265,7 +265,7 @@ class Acceptance_Admin_Creates_Instructor_TA(TestCase):
             "password": "tapassword",
             "first_name": "TA",
             "last_name": "User",
-            "is_ta": "on",
+            "role": "ta",  # Ensure this matches the dropdown value in the form
         })
 
         # Assert the response status code
@@ -284,7 +284,7 @@ class Acceptance_Admin_Creates_Instructor_TA(TestCase):
             "password": "instructorpassword",
             "first_name": "Instructor",
             "last_name": "User",
-            "is_instructor": "on",
+            "role": "instructor",  # Ensure this matches the dropdown value in the form
         })
 
         # Assert the response status code
@@ -604,8 +604,6 @@ class AcceptanceAdminCourseTests(TestCase):
         response = self.client.post(reverse("course-delete", args=[course.id]))
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.assertFalse(Course.objects.filter(course_id="CS101").exists())
-
-
 
 class UnitAdminCourseTests(TestCase):
     def setUp(self):
