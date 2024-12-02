@@ -10,8 +10,15 @@ from django.contrib.auth import get_user_model
 from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
 
 # Utility function for role checking
-def is_admin_or_instructor(user):
-    return user.is_admin or user.is_instructor
+class UtilityFunctions:
+    @staticmethod
+    def is_admin_or_instructor(user):
+        return user.is_admin or user.is_instructor
+
+    @staticmethod
+    def is_admin(user):
+        return user.is_admin
+
 
 @login_required
 def account_management(request):
@@ -111,7 +118,7 @@ def account_management(request):
         users = User.objects.all()
         return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
 
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
         # Render the account creation form
@@ -197,7 +204,7 @@ def custom_logout(request):
 # TA Views
 
 
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AssignTAToLabView(View):
     def get(self, request, lab_id):
         lab = get_object_or_404(Lab, id=lab_id)
@@ -215,7 +222,7 @@ class AssignTAToLabView(View):
         messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lab {lab_id}.")
         return redirect("lab-list")
 
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AssignTAToLectureView(View):
     def get(self, request, lecture_id):
         lecture = get_object_or_404(Lecture, id=lecture_id)
@@ -237,7 +244,7 @@ class AssignTAToLectureView(View):
 # Course Views
 
 
-@method_decorator([login_required, user_passes_test(is_admin_or_instructor)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin_or_instructor)], name="dispatch")
 class CourseCreation(View):
     def get(self, request):
         return render(request, "create_course.html")  # Ensure this template exists
@@ -294,7 +301,7 @@ class EditCourse(View):
             messages.error(request, f"An error occurred while updating the course: {str(e)}")
             return render(request, "edit_course.html", {"course": course})
         
-@method_decorator([login_required, user_passes_test(lambda user: user.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class DeleteCourseView(View):
     def post(self, request, pk):
         course = get_object_or_404(Course, id=pk)
