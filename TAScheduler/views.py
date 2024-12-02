@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
+from TAScheduler.models import User
 
 # ----------------------------------------
 # Section Management Views
 # ----------------------------------------
+
 
 @login_required
 def manage_section(request):
@@ -238,19 +240,19 @@ def account_management(request):
 # ----------------------------------------
 
 def custom_login(request):
+    if request.user.is_authenticated:
+        return redirect('/home/')
+    error = None
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        print(f"Attempting login for: {username}")
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            print("Authentication successful for:", username)
             login(request, user)
             return redirect('/home/')
         else:
-            print("Authentication failed.")
-            return render(request, "login.html", {"error": "Invalid username or password"})
-    return render(request, "login.html")
+            error = "Invalid username or password"
+    return render(request, "login.html", {"error": error})
 
 def custom_logout(request):
     logout(request)
