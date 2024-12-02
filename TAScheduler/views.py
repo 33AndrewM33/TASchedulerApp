@@ -8,8 +8,11 @@ from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.contrib.auth import get_user_model
 from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
 
-# Utility function for role checking
+# Utility functions
+
 class UtilityFunctions:
     @staticmethod
     def is_admin_or_instructor(user):
@@ -19,6 +22,7 @@ class UtilityFunctions:
     def is_admin(user):
         return user.is_admin
 
+# Account Controls 
 
 @method_decorator([login_required, user_passes_test(lambda u: u.is_admin)], name="dispatch")
 class AccountManagement(View):
@@ -89,7 +93,6 @@ class AccountManagement(View):
 
         return redirect("account_management")
 
-
 @method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
@@ -151,6 +154,8 @@ class AccountCreation(View):
         return redirect("home")
 
 
+# Logging in and out controls
+
 class LoginManagement(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -168,21 +173,18 @@ class LoginManagement(View):
         else:
             return render(request, "login.html", {"error": "Invalid username or password"})
 
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class LogoutManagement(View):
     def get(self, request):
         logout(request)
         return redirect('/')
 
-
-
-
-def custom_logout(request):
-    logout(request)
-    return redirect('/')  # Redirect to login page
+    def post(self, request):
+        logout(request)
+        return redirect('/')
 
 
 # TA Views
-
 
 @method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AssignTAToLabView(View):
@@ -222,7 +224,6 @@ class AssignTAToLectureView(View):
 
 
 # Course Views
-
 
 @method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin_or_instructor)], name="dispatch")
 class CourseCreation(View):
@@ -288,22 +289,26 @@ class DeleteCourseView(View):
         course.delete()
         messages.success(request, f"Course {course.name} has been successfully deleted.")
         return redirect('course-list')  # Adjust the redirect URL as necessary        
-    
-@login_required
-def manage_course(request):
-    return render(request, 'manage_course.html', {"user": request.user})
+
+@method_decorator(login_required, name="dispatch")
+class ManageCourseView(View):
+    @login_required
+    def manage_course(request):
+        return render(request, 'manage_course.html', {"user": request.user})
 
 
 
 
 # Section Views
 
-@login_required
-def create_section(request):
-    # Fetch all courses
-    courses = Course.objects.all()
+@method_decorator(login_required, name='dispatch')
+class CreateSectionView(View):
+    def get(self, request):
+        # Fetch all courses to pass to the template
+        courses = Course.objects.all()
+        return render(request, "create_section.html", {"courses": courses})
 
-    if request.method == "POST":
+    def post(self, request):
         # Extract data from the POST request
         course_id = request.POST.get("course_id")
         section_id = request.POST.get("section_id")
@@ -338,26 +343,35 @@ def create_section(request):
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
 
-    # Pass courses to the template
-    return render(request, "create_section.html", {"courses": courses})
-
-
+        # Fetch all courses to pass to the template again in case of errors
+        courses = Course.objects.all()
+        return render(request, "create_section.html", {"courses": courses})
     
-@login_required
-def edit_section(request, section_id):
-    section = get_object_or_404(Section, id=section_id)
-    courses = Course.objects.all()
+@method_decorator(login_required, name='dispatch')
+class EditSectionView(View):
+    def get(self, request, section_id):
+        # Fetch the section and available courses
+        section = get_object_or_404(Section, id=section_id)
+        courses = Course.objects.all()
 
-    if request.method == "POST":
+        # Pass the section and courses to the template
+        return render(request, "edit_section.html", {"section": section, "courses": courses})
+
+    def post(self, request, section_id):
+        # Fetch the section
+        section = get_object_or_404(Section, id=section_id)
+
+        # Extract data from the POST request
         course_id = request.POST.get("course_id")
-        section_id = request.POST.get("section_id")
+        section_identifier = request.POST.get("section_id")
         meeting_time = request.POST.get("meeting_time")
         location = request.POST.get("location")
 
         try:
+            # Fetch the course and update section details
             course = get_object_or_404(Course, id=course_id)
             section.course = course
-            section.section_id = section_id
+            section.section_id = section_identifier
             section.meeting_time = meeting_time
             section.location = location
             section.save()
@@ -366,7 +380,11 @@ def edit_section(request, section_id):
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
 
-    return render(request, "edit_section.html", {"section": section, "courses": courses})
+        # Fetch all courses to pass to the template in case of an error
+        courses = Course.objects.all()
+        return render(request, "edit_section.html", {"section": section, "courses": courses})
+
+
 
 
 @login_required
