@@ -1,58 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Section</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Edit Section</h1>
+    <div class="container">
+        <h1>Edit Section</h1>
+        <form method="POST" class="section-form">
+            {% csrf_token %}
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    <form method="POST">
-        {% csrf_token %}
-        <label for="location">Location:</label>
-        <input type="text" id="location" name="location" value="{{ section.location }}" required><br><br>
-
-        <label for="meeting_time">Meeting Time:</label>
-        <input type="text" id="meeting_time" name="meeting_time" value="{{ section.meeting_time }}" required><br><br>
-
-        <label for="section_type">Section Type:</label>
-        <select id="section_type" name="section_type">
-            <option value="lab" {% if section_type == "lab" %}selected{% endif %}>Lab</option>
-            <option value="lecture" {% if section_type == "lecture" %}selected{% endif %}>Lecture</option>
-        </select><br><br>
-
-        {% if section_type == "lab" %}
-            <label for="ta">Assign TA:</label>
-            <select id="ta" name="ta">
-                <option value="">Unassigned</option>
-                {% for ta in tas %}
-                    <option value="{{ ta.id }}" {% if section.ta and section.ta.id == ta.id %}selected{% endif %}>
-                        {{ ta.first_name }} {{ ta.last_name }}
-                    </option>
+            <!-- Course Dropdown -->
+            <label for="course_id">Host Course:</label>
+            <select name="course_id" id="course_id" class="form-control" required>
+                {% for course in courses %}
+                <option value="{{ course.id }}" {% if section.course.id == course.id %}selected{% endif %}>
+                    {{ course.course_id }}: {{ course.name }}
+                </option>
                 {% endfor %}
-            </select><br><br>
-        {% elif section_type == "lecture" %}
-            <label for="instructor">Assign Instructor:</label>
-            <select id="instructor" name="instructor">
-                <option value="">Unassigned</option>
-                {% for instructor in instructors %}
-                    <option value="{{ instructor.id }}" {% if section.instructor and section.instructor.id == instructor.id %}selected{% endif %}>
-                        {{ instructor.first_name }} {{ instructor.last_name }}
-                    </option>
-                {% endfor %}
-            </select><br><br>
-        {% endif %}
+            </select><br/>
 
-        <button type="submit">Update Section</button>
-    </form>
+            <!-- Section ID -->
+            <label for="section_id">Section ID:</label>
+            <input type="text" id="section_id" name="section_id" class="form-control" value="{{ section.section_id }}" required /><br/>
+
+            <!-- Meeting Days -->
+            <label for="meeting_time">Meeting Days:</label>
+            <input type="text" id="meeting_time" name="meeting_time" class="form-control" value="{{ section.meeting_time }}" required /><br/>
+
+            <!-- Location -->
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location" class="form-control" value="{{ section.location }}" required /><br/>
+
+            <!-- Submit Buttons -->
+            <div class="button-group">
+                <button type="submit" class="btn btn-submit">Save Changes</button>
+                <a href="{% url 'manage_section' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

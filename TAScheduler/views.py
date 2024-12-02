@@ -312,11 +312,10 @@ def manage_course(request):
 # Section Views
 
 @login_required
-def manage_section(request):
-    return render(request, 'manage_section.html', {"user": request.user})
-
-@login_required
 def create_section(request):
+    # Fetch all courses
+    courses = Course.objects.all()
+
     if request.method == "POST":
         # Extract data from the POST request
         course_id = request.POST.get("course_id")
@@ -325,10 +324,9 @@ def create_section(request):
         location = request.POST.get("location")
         meeting_time = request.POST.get("meeting_time")
 
-        # Validate input and handle section creation
         try:
             # Ensure the course exists
-            course = Course.objects.get(course_id=course_id)
+            course = get_object_or_404(Course, course_id=course_id)
             if Section.objects.filter(section_id=section_id, course=course).exists():
                 messages.error(request, "Section with this ID already exists for the course.")
             else:
@@ -340,34 +338,48 @@ def create_section(request):
                     meeting_time=meeting_time,
                 )
 
+                # Add Lab or Lecture
                 if section_type.lower() == "lab":
-                    Lab.objects.create(
-                        section_id=section.id,
-                        course=course,
-                        location=location,
-                        meeting_time=meeting_time,
-                        ta=None,  # Assuming no TA assigned initially
-                    )
+                    Lab.objects.create(section=section)
                 elif section_type.lower() == "lecture":
-                    Lecture.objects.create(
-                        section_id=section.id,
-                        course=course,
-                        location=location,
-                        meeting_time=meeting_time,
-                        ta=None,  # Assuming no TA assigned initially
-                        instructor=None,  # Assuming no instructor assigned initially
-                    )
+                    Lecture.objects.create(section=section)
 
                 messages.success(request, f"{section_type.capitalize()} section created successfully.")
-                return redirect("manage_section")  # Redirect after successful creation
+                return redirect("manage_section")
         except Course.DoesNotExist:
-            messages.error(request, "Course ID does not exist.")
+            messages.error(request, "Course does not exist.")
         except Exception as e:
-            messages.error(request, f"An unexpected error occurred: {str(e)}")
+            messages.error(request, f"An error occurred: {str(e)}")
 
-    # Render the form again if the method is GET or POST fails
-    return render(request, "create_section.html", {"user": request.user})
+    # Pass courses to the template
+    return render(request, "create_section.html", {"courses": courses})
 
+
+    
+@login_required
+def edit_section(request, section_id):
+    section = get_object_or_404(Section, id=section_id)
+    courses = Course.objects.all()
+
+    if request.method == "POST":
+        course_id = request.POST.get("course_id")
+        section_id = request.POST.get("section_id")
+        meeting_time = request.POST.get("meeting_time")
+        location = request.POST.get("location")
+
+        try:
+            course = get_object_or_404(Course, id=course_id)
+            section.course = course
+            section.section_id = section_id
+            section.meeting_time = meeting_time
+            section.location = location
+            section.save()
+            messages.success(request, "Section updated successfully.")
+            return redirect("manage_section")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+    return render(request, "edit_section.html", {"section": section, "courses": courses})
 
 
 @login_required
@@ -581,7 +593,14 @@ class course_section_management(View):
             return render(request, 'home.html')
 
 
-
+def delete_section(request, section_id):
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        section.delete()
+        messages.success(request, "Section deleted successfully.")
+    except Exception as e:
+        messages.error(request, f"An error occurred while deleting the section: {e}")
+    return redirect("manage_section")
 
 
 @method_decorator(login_required, name="dispatch")

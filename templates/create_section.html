@@ -10,14 +10,18 @@
 <body>
     <div class="container">
         <h1>Create Section</h1>
+
+        <!-- Form for creating a section -->
         <form method="POST" class="section-form">
             {% csrf_token %}
 
-            <!-- Course Dropdown -->
+            <!-- Host Course Dropdown -->
             <label for="course_id">Host Course:</label>
             <select name="course_id" id="course_id" class="form-control" required>
                 {% for course in courses %}
-                <option value="{{ course.course_id }}">{{ course.course_id }}: {{ course.name }}</option>
+                    <option value="{{ course.course_id }}">{{ course.course_id }}: {{ course.name }}</option>
+                {% empty %}
+                    <option disabled>No courses available</option>
                 {% endfor %}
             </select><br/>
 
@@ -40,7 +44,7 @@
             <label for="location">Location:</label>
             <input type="text" id="location" name="location" class="form-control" placeholder="Enter location (e.g., Room 101)" required /><br/>
 
-            <!-- Submit Buttons -->
+            <!-- Buttons -->
             <div class="button-group">
                 <button type="submit" class="btn btn-submit">Create Section</button>
                 <a href="{% url 'manage_section' %}" class="btn btn-cancel">Cancel</a>

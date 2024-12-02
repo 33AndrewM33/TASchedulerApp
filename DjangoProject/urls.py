@@ -17,7 +17,9 @@ urlpatterns = [
     path('home/', lambda request: render(request, 'home.html'), name='home'),  # Home page
     path('home/managecourse/', CourseManagement.as_view(), name='manage_course'),  # Course management
     path('home/managesection/', SectionManagement.as_view(), name='manage_section'),  # Section management
-    path('home/managesection/create/', SectionCreation.as_view(), name='create_section'),  # Create section
+    path("home/managesection/create/", views.create_section, name="create_section"),
+    path("edit_section/<int:section_id>/", views.edit_section, name="edit_section"),
+    path("delete_section/<int:section_id>/", views.delete_section, name="delete_section"),
 
     # Course Editing and Creation
     path("home/managecourse/edit/<str:course_id>/", EditCourse.as_view(), name="edit_course"),
