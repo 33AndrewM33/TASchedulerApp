@@ -4,12 +4,10 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
-from TAScheduler.models import User
 
 # ----------------------------------------
 # Section Management Views
 # ----------------------------------------
-
 
 @login_required
 def manage_section(request):
@@ -174,7 +172,7 @@ def account_management(request):
             try:
                 new_user = User.objects.create(
                     username=username,
-                    email_address=email,
+                    email=email,  # Ensure email is used
                     password=make_password(password)
                 )
                 if role == "ta":
@@ -210,7 +208,7 @@ def account_management(request):
             try:
                 user_to_update = get_object_or_404(User, id=user_id)
                 user_to_update.username = username
-                user_to_update.email_address = email
+                user_to_update.email = email  # Ensure email is updated
                 if password:
                     user_to_update.password = make_password(password)
                 user_to_update.is_ta = False
@@ -234,14 +232,14 @@ def account_management(request):
                 messages.error(request, f"Error updating user: {str(e)}")
     users = User.objects.all()
     return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
-#assigning ta or instructor to a course or lab
-
 # ----------------------------------------
 # Authentication Views
 # ----------------------------------------
+
 def assign_user_role(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     return render(request, 'assign_role.html', {'user': user})
+
 def custom_login(request):
     if request.user.is_authenticated:
         return redirect('/home/')
@@ -335,7 +333,7 @@ def edit_user(request, user_id):
         password = request.POST.get("password")
         role = request.POST.get("role")
         user_to_edit.username = username
-        user_to_edit.email_address = email
+        user_to_edit.email = email
         if password:
             user_to_edit.password = make_password(password)
         user_to_edit.is_ta = role == "ta"
