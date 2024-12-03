@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
@@ -10,6 +11,8 @@ from django.contrib.auth import get_user_model
 from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
+from django.core.validators import validate_email
+
 
 # Utility functions
 
@@ -550,19 +553,32 @@ class EditUserView(View):
     def post(self, request, user_id):
         user_to_edit = get_object_or_404(User, id=user_id)
 
-        # Get updated data from the form
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
         role = request.POST.get("role")
 
+        # Validate unique username
+        if User.objects.filter(username=username).exclude(id=user_to_edit.id).exists():
+            messages.error(request, "Username already exists.")
+            return render(request, "edit_user.html", {"user_to_edit": user_to_edit, "roles": ["ta", "instructor", "administrator"]})
+
+        # Validate email format
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Invalid email format.")
+            return render(request, "edit_user.html", {"user_to_edit": user_to_edit, "roles": ["ta", "instructor", "administrator"]})
+
         # Update user fields
         user_to_edit.username = username
         user_to_edit.email_address = email
-
         if password:
-            user_to_edit.password = make_password(password)
+            user_to_edit.set_password(password)
 
+        user_to_edit.is_ta = role == "ta"
+        user_to_edit.is_instructor = role == "instructor"
+        user_to_edit.is_admin = role == "administrator"
         user_to_edit.save()
 
         # Handle role-specific objects
@@ -573,70 +589,13 @@ class EditUserView(View):
         elif role == "administrator":
             Administrator.objects.get_or_create(user=user_to_edit)
 
-        # Remove objects for other roles
-        if role != "ta" and hasattr(user_to_edit, "ta"):
-            user_to_edit.ta.delete()
-        if role != "instructor" and hasattr(user_to_edit, "instructor"):
-            user_to_edit.instructor.delete()
-        if role != "administrator" and hasattr(user_to_edit, "administrator"):
-            user_to_edit.administrator.delete()
+        # Remove other roles' objects
+        if role != "ta" and hasattr(user_to_edit, "ta_profile"):
+            user_to_edit.ta_profile.delete()
+        if role != "instructor" and hasattr(user_to_edit, "instructor_profile"):
+            user_to_edit.instructor_profile.delete()
+        if role != "administrator" and hasattr(user_to_edit, "administrator_profile"):
+            user_to_edit.administrator_profile.delete()
 
         messages.success(request, f"User '{username}' updated successfully.")
         return redirect("account_management")
-
-
-# User Management 
-
-@login_required
-def edit_user(request, user_id):
-    # Fetch the user to edit
-    user_to_edit = get_object_or_404(User, id=user_id)
-
-    if request.method == "POST":
-        # Get updated data from the form
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        role = request.POST.get("role")
-
-        # Update user fields
-        user_to_edit.username = username
-        user_to_edit.email_address = email
-
-        # Update the password if provided
-        if password:
-            user_to_edit.password = make_password(password)
-
-        # Update roles
-        user_to_edit.is_ta = role == "ta"
-        user_to_edit.is_instructor = role == "instructor"
-        user_to_edit.is_admin = role == "administrator"
-        user_to_edit.save()
-
-        # Update role-specific models
-        if role == "ta":
-            # Handle TA creation or update
-            if not hasattr(user_to_edit, "ta_profile"):
-                TA.objects.create(user=user_to_edit, grader_status=False)  # Default grader_status to False
-            else:
-                ta_profile = user_to_edit.ta_profile
-                ta_profile.grader_status = ta_profile.grader_status or False  # Ensure grader_status is set
-                ta_profile.save()
-        elif role == "instructor":
-            if not hasattr(user_to_edit, "instructor_profile"):
-                Instructor.objects.create(user=user_to_edit)
-        elif role == "administrator":
-            if not hasattr(user_to_edit, "administrator_profile"):
-                Administrator.objects.create(user=user_to_edit)
-
-        messages.success(request, f"User '{username}' updated successfully.")
-        return redirect("account_management")  # Redirect back to account management
-
-    # Pass current user info to the template
-    context = {
-        "user_to_edit": user_to_edit,
-        "roles": ["ta", "instructor", "administrator"],
-    }
-    return render(request, "edit_user.html", context)
-
-
