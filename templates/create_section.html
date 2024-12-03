@@ -11,6 +11,15 @@
     <div class="container">
         <h1>Create Section</h1>
 
+        <!-- Display error messages -->
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
         <!-- Form for creating a section -->
         <form method="POST" class="section-form">
             {% csrf_token %}
@@ -27,22 +36,22 @@
 
             <!-- Section ID -->
             <label for="section_id">Section ID:</label>
-            <input type="text" id="section_id" name="section_id" class="form-control" placeholder="Enter unique section ID" required /><br/>
+            <input type="text" id="section_id" name="section_id" class="form-control" placeholder="Enter unique section ID" value="{{ request.POST.section_id }}" required /><br/>
 
             <!-- Section Type -->
             <label for="section_type">Section Type:</label>
             <select name="section_type" id="section_type" class="form-control" required>
-                <option value="Lab">Lab</option>
-                <option value="Lecture">Lecture</option>
+                <option value="Lab" {% if request.POST.section_type == "Lab" %}selected{% endif %}>Lab</option>
+                <option value="Lecture" {% if request.POST.section_type == "Lecture" %}selected{% endif %}>Lecture</option>
             </select><br/>
 
             <!-- Meeting Days -->
             <label for="meeting_days">Meeting Days:</label>
-            <input type="text" id="meeting_days" name="meeting_time" class="form-control" placeholder="E.g., Mon/Wed/Fri 10-11 AM" required /><br/>
+            <input type="text" id="meeting_days" name="meeting_time" class="form-control" placeholder="E.g., Mon/Wed/Fri 10-11 AM" value="{{ request.POST.meeting_time }}" required /><br/>
 
             <!-- Location -->
             <label for="location">Location:</label>
-            <input type="text" id="location" name="location" class="form-control" placeholder="Enter location (e.g., Room 101)" required /><br/>
+            <input type="text" id="location" name="location" class="form-control" placeholder="Enter location (e.g., Room 101)" value="{{ request.POST.location }}" required /><br/>
 
             <!-- Buttons -->
             <div class="button-group">

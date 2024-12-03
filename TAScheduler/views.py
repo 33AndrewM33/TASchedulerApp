@@ -12,6 +12,7 @@ from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Ad
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.core.validators import validate_email
+from django.core.exceptions import PermissionDenied
 
 # -----------------
 # Utility functions
@@ -25,12 +26,17 @@ class UtilityFunctions:
     @staticmethod
     def is_admin(user):
         return user.is_admin
+    
+    def admin_required(user):
+        if not user.is_admin:
+            raise PermissionDenied
+        return True
 
 # -----------------
 # Account Controls 
 # -----------------
 
-@method_decorator([login_required, user_passes_test(lambda u: u.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(UtilityFunctions.admin_required)], name="dispatch")
 class AccountManagement(View):
     def get(self, request):
         # Display all users
@@ -47,16 +53,31 @@ class AccountManagement(View):
             password = request.POST.get("password")
             role = request.POST.get("role")
 
+            # Check for missing fields
             if not all([username, email, password, role]):
                 messages.error(request, "All fields are required.")
                 return redirect("account_management")
 
+            # Check if the username or email already exists
             if User.objects.filter(username=username).exists():
                 messages.error(request, "Username already exists.")
                 return redirect("account_management")
 
             if User.objects.filter(email_address=email).exists():
                 messages.error(request, "Email address already exists.")
+                return redirect("account_management")
+
+            
+            # Validate email format
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, "Invalid email format.")
+                return redirect("account_management")
+
+            # Validate role
+            if role not in ["ta", "instructor", "administrator"]:
+                messages.error(request, "Invalid role selected.")
                 return redirect("account_management")
 
             # Assign role
@@ -90,6 +111,12 @@ class AccountManagement(View):
         elif action == "delete":
             # Handle user deletion
             user_id = request.POST.get("user_id")
+
+            # Validate user_id
+            if not user_id.isdigit():
+                messages.error(request, "Invalid user ID.")
+                return redirect("account_management")
+
             try:
                 user_to_delete = get_object_or_404(User, id=user_id)
                 user_to_delete.delete()
@@ -99,7 +126,7 @@ class AccountManagement(View):
 
         return redirect("account_management")
 
-@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
+@method_decorator([login_required, user_passes_test(lambda u: u.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
         return render(request, "create_account.html")
@@ -114,10 +141,39 @@ class AccountCreation(View):
         phone_number = request.POST.get("phone_number", "")
         role = request.POST.get("role")
 
+        # Validate required fields
         if not all([username, email_address, password, first_name, last_name, role]):
             messages.error(request, "All fields are required.")
             return redirect("create-account")
 
+        # Validate email format
+        try:
+            validate_email(email_address)
+        except ValidationError:
+            messages.error(request, "Invalid email format.")
+            return redirect("create-account")
+
+        # Validate field lengths
+        if len(username) > 50:
+            messages.error(request, "Username cannot exceed 50 characters.")
+            return redirect("create-account")
+        if len(email_address) > 90:
+            messages.error(request, "Email address cannot exceed 90 characters.")
+            return redirect("create-account")
+        if len(first_name) > 30:
+            messages.error(request, "First name cannot exceed 30 characters.")
+            return redirect("create-account")
+        if len(last_name) > 30:
+            messages.error(request, "Last name cannot exceed 30 characters.")
+            return redirect("create-account")
+        if len(home_address) > 90:
+            messages.error(request, "Home address cannot exceed 90 characters.")
+            return redirect("create-account")
+        if len(phone_number) > 15:
+            messages.error(request, "Phone number cannot exceed 15 characters.")
+            return redirect("create-account")
+
+        # Check for duplicate username or email
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
             return redirect("create-account")
@@ -130,6 +186,7 @@ class AccountCreation(View):
         is_instructor = role == "instructor"
         is_ta = role == "ta"
 
+        # Create the user
         try:
             user = User.objects.create(
                 username=username,
@@ -140,7 +197,7 @@ class AccountCreation(View):
                 phone_number=phone_number,
                 is_admin=is_admin,
                 is_instructor=is_instructor,
-                is_ta=is_ta
+                is_ta=is_ta,
             )
             user.set_password(password)
             user.save()
@@ -359,48 +416,52 @@ class CourseManagement(View):
 @method_decorator(login_required, name='dispatch')
 class CreateSectionView(View):
     def get(self, request):
-        # Fetch all courses to pass to the template
         courses = Course.objects.all()
         return render(request, "create_section.html", {"courses": courses})
 
     def post(self, request):
-        # Extract data from the POST request
         course_id = request.POST.get("course_id")
         section_id = request.POST.get("section_id")
         section_type = request.POST.get("section_type")
         location = request.POST.get("location")
         meeting_time = request.POST.get("meeting_time")
 
+        # Fetch course
         try:
-            # Ensure the course exists
-            course = get_object_or_404(Course, course_id=course_id)
-            if Section.objects.filter(section_id=section_id, course=course).exists():
-                messages.error(request, "Section with this ID already exists for the course.")
-            else:
-                # Create the section
-                section = Section.objects.create(
-                    section_id=section_id,
-                    course=course,
-                    location=location,
-                    meeting_time=meeting_time,
-                )
-
-                # Add Lab or Lecture
-                if section_type.lower() == "lab":
-                    Lab.objects.create(section=section)
-                elif section_type.lower() == "lecture":
-                    Lecture.objects.create(section=section)
-
-                messages.success(request, f"{section_type.capitalize()} section created successfully.")
-                return redirect("manage_section")
+            course = Course.objects.get(course_id=course_id)
         except Course.DoesNotExist:
-            messages.error(request, "Course does not exist.")
-        except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
+            messages.error(request, "Invalid course selected.")
+            courses = Course.objects.all()
+            return render(request, "create_section.html", {"courses": courses})
 
-        # Fetch all courses to pass to the template again in case of errors
-        courses = Course.objects.all()
-        return render(request, "create_section.html", {"courses": courses})
+        # Validate section type
+        if section_type.lower() not in ["lab", "lecture"]:
+            messages.error(request, "Invalid section type provided.")
+            courses = Course.objects.all()
+            return render(request, "create_section.html", {"courses": courses})
+
+        # Check for duplicate sections
+        if Section.objects.filter(section_id=section_id, course=course).exists():
+            messages.error(request, "A section with this ID already exists for the selected course.")
+            courses = Course.objects.all()
+            return render(request, "create_section.html", {"courses": courses})
+
+        # Create the section and related model
+        section = Section.objects.create(
+            section_id=section_id,
+            course=course,
+            location=location,
+            meeting_time=meeting_time,
+        )
+
+        if section_type.lower() == "lab":
+            Lab.objects.create(section=section)
+        elif section_type.lower() == "lecture":
+            Lecture.objects.create(section=section)
+
+        messages.success(request, f"{section_type.capitalize()} section created successfully.")
+        return redirect("manage_section")
+
     
 @method_decorator(login_required, name='dispatch')
 class EditSectionView(View):
