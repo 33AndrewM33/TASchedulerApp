@@ -316,7 +316,6 @@ class AccountCreationViewTest(TestCase):
         self.assertIn("All fields are required.", messages, "Expected error message for empty password.")
         self.assertFalse(User.objects.filter(username="emptyuser").exists(), "User should not be created with an empty password.")
 
-
 class CreateSectionViewTest(TestCase):
     def setUp(self):
         # Initialize the test client
@@ -432,3 +431,85 @@ class CreateSectionViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "create_section.html")
         self.assertEqual(Section.objects.filter(section_id="105").count(), 1)
+        
+        
+    def test_post_missing_required_fields(self):
+        # Missing `meeting_time`
+        data = {
+            "course_id": self.course.course_id,
+            "section_id": "106",
+            "section_type": "lab",
+            "location": "Room 606",
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_section.html")
+        self.assertFalse(Section.objects.filter(section_id="106").exists())
+
+
+    def test_post_section_id_exceeds_max_length(self):
+        data = {
+            "course_id": self.course.course_id,
+            "section_id": "A" * 256,  # Assuming max length is less than 256
+            "section_type": "lab",
+            "location": "Room 707",
+            "meeting_time": "MWF 7-8pm",
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_section.html")
+        self.assertFalse(Section.objects.filter(location="Room 707").exists())
+        
+        
+    def test_post_section_id_with_invalid_characters(self):
+        data = {
+            "course_id": self.course.course_id,
+            "section_id": "INVALID@ID!",  # Invalid characters
+            "section_type": "lab",
+            "location": "Room 808",
+            "meeting_time": "MWF 8-9pm",
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_section.html")
+        self.assertFalse(Section.objects.filter(location="Room 808").exists())
+
+
+    def test_unauthorized_access(self):
+        self.client.logout()  # Ensure the user is logged out
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)  # Redirect to login page
+        self.assertRedirects(response, reverse("login") + f"?next={self.url}")
+
+    def test_post_case_insensitive_section_id(self):
+        Section.objects.create(
+            section_id="109",
+            course=self.course,
+            location="Room 909",
+            meeting_time="MWF 9-10pm",
+        )
+        data = {
+            "course_id": self.course.course_id,
+            "section_id": "109".lower(),  # Lowercase version of the same ID
+            "section_type": "lab",
+            "location": "Room 909",
+            "meeting_time": "MWF 9-10pm",
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_section.html")
+        self.assertEqual(Section.objects.filter(section_id="109").count(), 1)
+        
+    def test_post_edge_case_meeting_time(self):
+        data = {
+            "course_id": self.course.course_id,
+            "section_id": "110",
+            "section_type": "lab",
+            "location": "Room 1010",
+            "meeting_time": "F 1-2pm",  # Single day with valid time
+        }
+        response = self.client.post(self.url, data)
+        self.assertRedirects(response, reverse("manage_section"))
+        self.assertTrue(Section.objects.filter(section_id="110").exists())
+
+

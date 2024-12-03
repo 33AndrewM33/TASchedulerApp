@@ -426,7 +426,19 @@ class CreateSectionView(View):
         location = request.POST.get("location")
         meeting_time = request.POST.get("meeting_time")
 
-        # Fetch course
+
+    # Validate required fields
+        if not all([course_id, section_id, section_type, location, meeting_time]):
+            messages.error(request, "All fields are required.")
+            courses = Course.objects.all()
+            return render(request, "create_section.html", {"courses": courses})
+        
+            # Validate section_id is numeric
+        if not section_id.isdigit():
+            messages.error(request, "Section ID must be a number.")
+            courses = Course.objects.all()
+            return render(request, "create_section.html", {"courses": courses})
+            # Fetch course
         try:
             course = Course.objects.get(course_id=course_id)
         except Course.DoesNotExist:
