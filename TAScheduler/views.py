@@ -479,9 +479,10 @@ class CreateSectionView(View):
 class EditSectionView(View):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_admin:
-            return HttpResponseForbidden("You do not have permission to edit sections.")
+            messages.error(request, "You do not have permission to edit sections.")
+            return redirect("manage_section")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request, section_id):
         section = get_object_or_404(Section, id=section_id)
         courses = Course.objects.all()
@@ -490,72 +491,63 @@ class EditSectionView(View):
     def post(self, request, section_id):
         section = get_object_or_404(Section, id=section_id)
 
-        # Extract data from the POST request
-        course_id = request.POST.get("course_id")
-        section_identifier = request.POST.get("section_id")
-        meeting_time = request.POST.get("meeting_time")
-        location = request.POST.get("location")
+        # Extract form data
+        course_id = request.POST.get("course_id", "").strip()
+        section_identifier = request.POST.get("section_id", "").strip()
+        meeting_time = request.POST.get("meeting_time", "").strip()
+        location = request.POST.get("location", "").strip()
 
-
-        if not all(field.strip() for field in [course_id, section_identifier, meeting_time, location]):
-            messages.error(request, "All fields are required.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
-
-        if len(location.strip()) > 100:  # Example max length
-            messages.error(request, "Location is too long.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
-
-        if not re.match(r"^[A-Za-z\s0-9:-]+$", meeting_time):  # Example regex for meeting time
-            messages.error(request, "Invalid meeting time format.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
-
-        # Validate required fields
+        # Validation messages
         if not all([course_id, section_identifier, meeting_time, location]):
             messages.error(request, "All fields are required.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
 
-        # Validate section_id format
+        if len(location) > 100:
+            messages.error(request, "Location is too long.")
+            return self.render_form(request, section)
+
+        if not re.match(r"^[A-Za-z\s0-9:-]+$", meeting_time):
+            messages.error(request, "Invalid meeting time format.")
+            return self.render_form(request, section)
+
         if not section_identifier.isdigit():
             messages.error(request, "Section ID must be a numeric value.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
 
-        if len(section_identifier) > 10:  # Example: Max length is 10 digits
+        if len(section_identifier) > 10:
             messages.error(request, "Section ID is too long.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
 
-        # Validate course existence
         try:
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             messages.error(request, "Invalid course selected.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
 
-        # Check for duplicate section ID within the selected course
+        # Check for duplicate section ID in the same course
         if Section.objects.filter(course=course, section_id=section_identifier).exclude(id=section.id).exists():
             messages.error(request, "A section with this ID already exists in the selected course.")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
 
         try:
-            # Update section details
+            # Update the section details
             section.course = course
-            section.section_id = int(section_identifier)  # Ensure section_id is stored as an integer
+            section.section_id = int(section_identifier)  # Ensure numeric format
             section.meeting_time = meeting_time
             section.location = location
             section.save()
+
             messages.success(request, "Section updated successfully.")
             return redirect("manage_section")
         except Exception as e:
             messages.error(request, f"An error occurred while updating the section: {e}")
-            courses = Course.objects.all()
-            return render(request, "edit_section.html", {"section": section, "courses": courses})
+            return self.render_form(request, section)
+
+    def render_form(self, request, section):
+        """Helper method to render the edit section form with courses."""
+        courses = Course.objects.all()
+        return render(request, "edit_section.html", {"section": section, "courses": courses})
+
 
 @method_decorator(login_required, name="dispatch")
 class SectionManagement(View):
