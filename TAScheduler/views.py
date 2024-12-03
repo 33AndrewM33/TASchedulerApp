@@ -13,8 +13,9 @@ from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.core.validators import validate_email
 
-
+# -----------------
 # Utility functions
+# -----------------
 
 class UtilityFunctions:
     @staticmethod
@@ -25,7 +26,9 @@ class UtilityFunctions:
     def is_admin(user):
         return user.is_admin
 
+# -----------------
 # Account Controls 
+# -----------------
 
 @method_decorator([login_required, user_passes_test(lambda u: u.is_admin)], name="dispatch")
 class AccountManagement(View):
@@ -156,8 +159,9 @@ class AccountCreation(View):
 
         return redirect("home")
 
-
+# -----------------
 # Logging in and out controls
+# -----------------
 
 class LoginManagement(View):
     def get(self, request):
@@ -186,8 +190,9 @@ class LogoutManagement(View):
         logout(request)
         return redirect('/')
 
-
+# -----------------
 # TA Views
+# -----------------
 
 @method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin)], name="dispatch")
 class AssignTAToLabView(View):
@@ -225,8 +230,9 @@ class AssignTAToLectureView(View):
         messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to lecture {lecture_id}.")
         return redirect("lecture-list")
 
-
+# -----------------
 # Course Views
+# -----------------
 
 @method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin_or_instructor)], name="dispatch")
 class CourseCreation(View):
@@ -346,9 +352,9 @@ class CourseManagement(View):
         return redirect("manage_course")
 
 
-
-
+# -----------------
 # Section Views
+# -----------------
 
 @method_decorator(login_required, name='dispatch')
 class CreateSectionView(View):
@@ -470,8 +476,9 @@ class DeleteSectionView(View):
             messages.error(request, f"An error occurred while deleting the section: {e}")
         return redirect("manage_section")
 
-
+# -----------------
 # Home webpage
+# -----------------
 
 @method_decorator(login_required, name='dispatch')
 class HomeView(View):
@@ -482,8 +489,9 @@ class HomeView(View):
         # Render the home page
         return render(request, 'home.html', {"user": request.user})
 
-
+# -----------------
 # Password Management 
+# -----------------
 
 class ForgotPasswordView(View):
     security_questions = {
@@ -542,6 +550,11 @@ class ForgotPasswordView(View):
                 error = "Session expired. Please start the process again."
 
         return render(request, "forgot_password.html", {"error": error})
+    
+    
+# -----------------
+# Edit User 
+# -----------------   
     
 @method_decorator(login_required, name='dispatch')
 class EditUserView(View):
