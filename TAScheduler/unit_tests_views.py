@@ -512,4 +512,251 @@ class CreateSectionViewTest(TestCase):
         self.assertRedirects(response, reverse("manage_section"))
         self.assertTrue(Section.objects.filter(section_id="110").exists())
 
+class EditSectionViewTests(TestCase):
+    def setUp(self):
+        # Create a test user
+        self.admin_user = User.objects.create(
+            username="admin",
+            email_address="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_admin=True,
+        )
+        self.admin_user.set_password("password123")  # Set password
+        self.admin_user.save()
+
+        # Login as admin user
+        self.client.login(username="admin", password="password123")
+
+        # Create a test course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            name="Intro to Computer Science",
+            description="Test course description",
+            semester="Fall 2024",
+            modality="In-Person",
+            num_of_sections=5,
+        )
+
+        # Create another course for updates
+        self.new_course = Course.objects.create(
+            course_id="CS102",
+            name="Data Structures",
+            description="Advanced course",
+            semester="Spring 2025",
+            modality="Online",
+            num_of_sections=3,
+        )
+
+        # Create a test section
+        self.section = Section.objects.create(
+            section_id="1",
+            course=self.course,
+            meeting_time="MWF 10:00AM",
+            location="Room 101",
+        )
+
+        # URL for edit section
+        self.edit_url = reverse("edit_section", args=[self.section.id])
+
+    def test_get_edit_section_view(self):
+        """Test that the edit section view loads correctly."""
+        response = self.client.get(self.edit_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "edit_section.html")
+        self.assertContains(response, self.section.section_id)
+        self.assertContains(response, self.course.name)
+
+    def test_post_valid_edit_section(self):
+        response = self.client.post(self.edit_url, {
+            "course_id": self.new_course.id,
+            "section_id": "2",
+            "meeting_time": "TTh 2:00PM",
+            "location": "Room 202",
+        })
+
+        self.section.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.section.section_id, 2)  # Compare as an integer
+        self.assertEqual(self.section.course, self.new_course)
+
+
+
+    def test_post_invalid_course(self):
+        response = self.client.post(self.edit_url, {
+            "course_id": 999,  # Invalid course ID
+            "section_id": "2",
+            "meeting_time": "TTh 2:00PM",
+            "location": "Room 202",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid course selected.")
+
+    def test_post_missing_fields(self):
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "",
+            "meeting_time": "",
+            "location": "Room 202",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "All fields are required.")
+
+    def test_access_denied_for_non_authenticated_user(self):
+        """Test that unauthenticated users cannot access the view."""
+        self.client.logout()  # Log out the user
+
+        response = self.client.get(self.edit_url)
+        self.assertEqual(response.status_code, 302)  # Redirect to login page
+        self.assertRedirects(response, reverse("login") + f"?next={self.edit_url}")
+
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "2",
+            "meeting_time": "TTh 2:00PM",
+            "location": "Room 202",
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect to login page
+        self.assertRedirects(response, reverse("login") + f"?next={self.edit_url}")
+
+    def test_post_duplicate_section_id_in_course(self):
+        """Test that editing a section to a duplicate section_id in the same course is not allowed."""
+        # Create another section in the same course with a different ID
+        Section.objects.create(
+            section_id=2,
+            course=self.course,
+            meeting_time="MWF 2:00PM",
+            location="Room 202",
+        )
+
+        # Attempt to update the current section to have the same section_id as the other section
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "2",  # Duplicate section ID
+            "meeting_time": "TTh 3:00PM",
+            "location": "Room 303",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A section with this ID already exists in the selected course.")
+
+        # Ensure the section was not updated
+        self.section.refresh_from_db()
+        self.assertNotEqual(self.section.section_id, 2)
+        self.assertNotEqual(self.section.meeting_time, "TTh 3:00PM")
+        self.assertNotEqual(self.section.location, "Room 303")
+
+
+    def test_post_update_with_same_section_id(self):
+        """Test that updating a section without changing the section_id is allowed."""
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": self.section.section_id,  # Same section ID
+            "meeting_time": "TTh 11:00AM",
+            "location": "Room 105",
+        })
+
+        self.section.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.section.section_id, int(self.section.section_id))  # Ensure no change
+        self.assertEqual(self.section.meeting_time, "TTh 11:00AM")
+        self.assertEqual(self.section.location, "Room 105")
+
+    def test_post_move_section_to_different_course(self):
+        """Test that a section can be moved to a different course without conflicts."""
+        response = self.client.post(self.edit_url, {
+            "course_id": self.new_course.id,
+            "section_id": "1",  # Valid section ID in the new course
+            "meeting_time": "MWF 9:00AM",
+            "location": "Room 204",
+        })
+
+        self.section.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.section.course, self.new_course)
+        self.assertEqual(self.section.section_id, 1)
+        self.assertEqual(self.section.meeting_time, "MWF 9:00AM")
+        self.assertEqual(self.section.location, "Room 204")
+
+    def test_post_invalid_section_id_format(self):
+        """Test that a non-numeric or excessively long section_id is not accepted."""
+        # Non-numeric section_id
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "invalid_id",  # Invalid format
+            "meeting_time": "MWF 10:00AM",
+            "location": "Room 101",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Section ID must be a numeric value.")
+
+        # Excessively long section_id
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "1" * 256,  # Exceeds acceptable length
+            "meeting_time": "MWF 10:00AM",
+            "location": "Room 101",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Section ID is too long.")
+
+
+    def test_post_whitespace_fields(self):
+        """Test that fields with only whitespace are rejected."""
+        response = self.client.post(self.edit_url, {
+            "course_id": "   ",
+            "section_id": "   ",
+            "meeting_time": "   ",
+            "location": "   ",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "All fields are required.")
+
+
+    def test_post_invalid_meeting_time(self):
+        """Test that invalid meeting time formats are not accepted."""
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "2",
+            "meeting_time": "InvalidTimeFormat!",
+            "location": "Room 101",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid meeting time format.")
+
+
+    def test_post_access_denied_for_non_admin_user(self):
+        """Test that non-admin users cannot edit sections."""
+        non_admin_user = User.objects.create(
+            username="nonadmin",
+            email_address="nonadmin@example.com",
+            first_name="Non",
+            last_name="Admin",
+            is_admin=False,
+        )
+        non_admin_user.set_password("password123")
+        non_admin_user.save()
+
+        self.client.logout()
+        self.client.login(username="nonadmin", password="password123")
+
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "2",
+            "meeting_time": "TTh 2:00PM",
+            "location": "Room 202",
+        })
+
+        self.assertEqual(response.status_code, 403)  # Forbidden
+
+    def test_post_invalid_location(self):
+        """Test that an invalid or excessively long location is rejected."""
+        response = self.client.post(self.edit_url, {
+            "course_id": self.course.id,
+            "section_id": "2",
+            "meeting_time": "MWF 10:00AM",
+            "location": "A" * 256,  # Excessively long location
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Location is too long.")
 

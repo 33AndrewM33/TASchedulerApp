@@ -10,6 +10,18 @@
 <body>
     <div class="container">
         <h1>Edit Section</h1>
+
+        <!-- Display Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <form method="POST" class="section-form">
             {% csrf_token %}
 
