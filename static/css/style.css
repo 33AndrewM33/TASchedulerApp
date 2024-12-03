@@ -15,6 +15,7 @@ body {
     align-items: center;
     height: 100vh;
     padding: 10px;
+    overflow-y: auto; /* Allows scrolling for smaller devices */
 }
 
 /* Main Container */
@@ -23,8 +24,9 @@ body {
     width: 90%;
     background-color: rgba(255, 255, 255, 0.1); /* Slight transparency */
     border-radius: 10px;
-    padding: 20px;
+    padding: 30px;
     box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+    margin-bottom: 50px;
 }
 
 /* Header */
@@ -45,7 +47,7 @@ h1 {
 
 .user-table th, .user-table td {
     border: 1px solid #ddd;
-    padding: 10px;
+    padding: 12px 15px;
     text-align: center;
     color: #333;
     background: rgba(255, 255, 255, 0.9);
@@ -61,6 +63,10 @@ h1 {
     background-color: #f1f1f1;
 }
 
+.user-table td {
+    font-size: 14px;
+}
+
 /* Form Section */
 form {
     margin-top: 20px;
@@ -68,6 +74,9 @@ form {
     background: rgba(255, 255, 255, 0.2); /* Transparent background */
     border-radius: 8px;
     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-wrap: wrap; /* Responsive layout for smaller screens */
+    gap: 15px;
 }
 
 form label {
@@ -77,10 +86,9 @@ form label {
     margin-bottom: 5px;
 }
 
-form input, form select {
-    width: 100%;
+form input, form select, form button {
+    flex: 1 1 calc(33.33% - 20px); /* Responsive fields */
     padding: 10px;
-    margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 14px;
@@ -88,14 +96,14 @@ form input, form select {
     background-color: #f9f9f9;
 }
 
-form input:focus, form select:focus {
+form input:focus, form select:focus, form button:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
 }
 
 /* Buttons */
-button, .nav-button, .button {
+button, .nav-button, .button, .btn {
     padding: 10px 15px;
     font-size: 14px;
     border: none;
@@ -105,10 +113,49 @@ button, .nav-button, .button {
     transition: all 0.3s ease;
 }
 
-button:hover, .nav-button:hover, .button:hover {
+button:hover, .nav-button:hover, .button:hover, .btn:hover {
     transform: scale(1.05);
 }
 
+.btn-create {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-size: 18px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.btn-create:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Back to Home Button */
+.btn-back {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #6c757d;
+    text-decoration: none;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.btn-back:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+/* Delete Button */
 .delete-btn {
     background-color: #dc3545;
     color: #fff;
@@ -118,6 +165,7 @@ button:hover, .nav-button:hover, .button:hover {
     background-color: #c82333;
 }
 
+/* Edit Button */
 .edit-btn {
     background-color: #ffc107;
     color: #212529;
@@ -127,6 +175,7 @@ button:hover, .nav-button:hover, .button:hover {
     background-color: #e0a800;
 }
 
+/* Submit Button */
 .submit-btn {
     background-color: #28a745;
     color: #fff;
@@ -227,6 +276,15 @@ a:hover {
 
     form {
         width: 100%;
+        flex-direction: column;
+    }
+
+    .btn-create {
+        width: 100%;
+    }
+
+    .btn-back {
+        margin-bottom: 10px;
     }
 }
 .save-button {
