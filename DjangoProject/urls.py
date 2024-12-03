@@ -4,8 +4,8 @@ from django.urls import path
 from TAScheduler import views
 from TAScheduler.views import (
     AccountCreation, AssignTAToLabView, AssignTAToLectureView, CourseCreation, 
-    CourseManagement, CreateSectionView, DeleteCourseView, EditCourse, EditSectionView, LoginManagement, 
-    LogoutManagement, SectionCreation, SectionManagement, AccountManagement
+    CourseManagement, CreateSectionView, DeleteCourseView, DeleteSectionView, EditCourse, EditSectionView, EditUserView, ForgotPasswordView, HomeView, LoginManagement, 
+    LogoutManagement, SectionManagement, AccountManagement
 )
 
 urlpatterns = [
@@ -14,13 +14,13 @@ urlpatterns = [
     path('logout/', LogoutManagement.as_view(), name='logout'),  # Logout page
 
     # Home and Dashboard
-    path('home/', lambda request: render(request, 'home.html'), name='home'),  # Home page
+    path('home/', HomeView.as_view(), name='home'),  # Home page,  # Home page
     path('home/managecourse/', CourseManagement.as_view(), name='manage_course'),  # Course management
     path('home/managesection/', SectionManagement.as_view(), name='manage_section'),  # Section management
     path("home/managesection/create/", CreateSectionView.as_view(), name="create_section"),
 
     path("edit_section/<int:section_id>/", EditSectionView.as_view(), name="edit_section"),
-    path("delete_section/<int:section_id>/", views.delete_section, name="delete_section"),
+    path("delete_section/<int:section_id>/", DeleteSectionView.as_view(), name="delete_section"),
 
     # Course Editing and Creation
     path("home/managecourse/edit/<str:course_id>/", EditCourse.as_view(), name="edit_course"),
@@ -37,8 +37,8 @@ urlpatterns = [
     # Account Management
     path("create-account/", AccountCreation.as_view(), name="create-account"),
     path('home/accountmanagement/', AccountManagement.as_view(), name='account_management'),
-    path("home/accountmanagement/edit/<int:user_id>/", views.edit_user, name="edit_user"),  # Edit user
+    path("home/accountmanagement/edit/<int:user_id>/", EditUserView.as_view(), name="edit_user"),  # Edit user
 
     # Forgot Password
-    path('forgot_password/', views.forgot_password, name='forgot_password'),
+    path('forgot_password/', ForgotPasswordView.as_view(), name='forgot_password'),
 ]
