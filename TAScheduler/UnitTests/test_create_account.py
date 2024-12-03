@@ -8,7 +8,6 @@ class CreateAccountTestCase(TestCase):
         pass
 
     def test_create_ta_account(self):
-        """Test creating a TA account."""
         user = User.objects.create(
             username="ta_user",
             email_address="ta_user@example.com",
@@ -29,7 +28,6 @@ class CreateAccountTestCase(TestCase):
         self.assertEqual(user.ta_profile.grader_status, True)
 
     def test_create_instructor_account(self):
-        """Test creating an Instructor account."""
         user = User.objects.create(
             username="instructor_user",
             email_address="instructor_user@example.com",
@@ -49,7 +47,6 @@ class CreateAccountTestCase(TestCase):
         self.assertTrue(hasattr(user, "instructor_profile"))
 
     def test_create_admin_account(self):
-        """Test creating an Administrator account."""
         user = User.objects.create(
             username="admin_user",
             email_address="admin_user@example.com",
@@ -69,7 +66,6 @@ class CreateAccountTestCase(TestCase):
         self.assertTrue(hasattr(user, "administrator_profile"))
 
     def test_create_user_without_role(self):
-        """Test creating a user without any role."""
         user = User.objects.create(
             username="basic_user",
             email_address="basic_user@example.com",
