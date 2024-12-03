@@ -582,28 +582,31 @@ class SectionManagement(View):
 
         return redirect("manage_section")
 
-
 @method_decorator(login_required, name="dispatch")
 class DeleteSectionView(View):
     def dispatch(self, request, *args, **kwargs):
+        # Check if the user is an admin
         if not UtilityFunctions.is_admin(request.user):
             messages.error(request, "You do not have permission to delete sections.")
             return redirect("manage_section")
         return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request, section_id):
+    def get(self, request, section_id):
         try:
             # Fetch the section
             section = get_object_or_404(Section, id=section_id)
+
+            # Confirm or delete the section directly on GET
             section.delete()
             messages.success(request, "Section deleted successfully.")
         except Exception as e:
             messages.error(request, f"An error occurred while deleting the section: {e}")
         return redirect("manage_section")
 
-    def get(self, request, section_id):
-        # Explicitly disallow GET requests
-        return HttpResponseNotAllowed(["POST"], "GET method is not allowed for this action.")
+    def post(self, request, section_id):
+        # Keep POST functionality if needed
+        return self.get(request, section_id)
+
 
 
 
