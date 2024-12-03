@@ -1,5 +1,6 @@
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.contrib.messages import get_messages
 
 from TAScheduler.models import Course, Lab, Lecture, Section, User
 
@@ -760,3 +761,208 @@ class EditSectionViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Location is too long.")
 
+class DeleteSectionViewTests(TestCase):
+    def setUp(self):
+        # Create an admin user
+        self.admin_user = User.objects.create(
+            username="admin",
+            email_address="admin@example.com",
+            is_admin=True
+        )
+        self.admin_user.set_password("password123")
+        self.admin_user.save()
+
+        # Create a non-admin user
+        self.non_admin_user = User.objects.create(
+            username="nonadmin",
+            email_address="nonadmin@example.com",
+            is_admin=False
+        )
+        self.non_admin_user.set_password("password123")
+        self.non_admin_user.save()
+
+        # Create a test course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            name="Intro to Computer Science",
+            description="Basic introduction to CS",
+            semester="Fall 2024",
+            modality="In-Person",
+            num_of_sections=5,
+        )
+
+        # Create a test section associated with the course
+        self.section = Section.objects.create(
+            section_id="101",
+            course=self.course,
+            meeting_time="MWF 10:00AM",
+            location="Room 101",
+        )
+
+        # URL for delete section
+        self.delete_section_url = reverse("delete_section", args=[self.section.id])
+
+    def test_admin_can_delete_section(self):
+        """Test that an admin user can successfully delete a section."""
+        self.client.login(username="admin", password="password123")
+        response = self.client.post(self.delete_section_url)
+
+        # Check redirection to manage section
+        self.assertRedirects(response, reverse("manage_section"))
+
+        # Check success message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn("Section deleted successfully.", str(messages[0]))
+
+        # Verify the section no longer exists
+        self.assertFalse(Section.objects.filter(id=self.section.id).exists())
+
+    def test_non_admin_cannot_delete_section(self):
+        """Test that a non-admin user cannot delete a section."""
+        self.client.login(username="nonadmin", password="password123")
+        response = self.client.post(self.delete_section_url)
+
+        # Check redirection to "manage_section"
+        self.assertRedirects(response, reverse("manage_section"))
+
+        # Check error message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn("You do not have permission to delete sections.", str(messages[0]))
+
+        # Verify the section still exists
+        self.assertTrue(Section.objects.filter(id=self.section.id).exists())
+
+
+
+    def test_delete_nonexistent_section(self):
+        """Test that attempting to delete a non-existent section results in an error."""
+        self.client.login(username="admin", password="password123")
+        nonexistent_section_url = reverse("delete_section", args=[9999])
+        response = self.client.post(nonexistent_section_url)
+
+        # Check redirection to manage section
+        self.assertRedirects(response, reverse("manage_section"))
+
+        # Check error message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn("An error occurred while deleting the section:", str(messages[0]))
+
+
+class SectionManagementTests(TestCase):
+    def setUp(self):
+        # Initialize test client
+        self.client = Client()
+
+        # Create an admin user
+        self.admin_user = User.objects.create(
+            username="admin",
+            email_address="admin@example.com",
+            is_admin=True
+        )
+        self.admin_user.set_password("password123")
+        self.admin_user.save()
+
+        # Log in the test client as admin
+        self.client.login(username="admin", password="password123")
+
+        # Create a course
+        self.course = Course.objects.create(
+            course_id="CS101",
+            name="Intro to Computer Science",
+            description="A basic computer science course",
+            semester="Fall 2024",
+            modality="In-person",
+            num_of_sections=5,
+        )
+
+        # Create sections
+        self.section1 = Section.objects.create(
+            section_id="1",
+            course=self.course,
+            meeting_time="MWF 10:00AM",
+            location="Room 101"
+        )
+        self.section2 = Section.objects.create(
+            section_id="2",
+            course=self.course,
+            meeting_time="TTh 2:00PM",
+            location="Room 202"
+        )
+
+        # Define the manage section URL
+        self.manage_section_url = reverse("manage_section")
+
+    def test_get_manage_sections(self):
+        """Test that the GET request renders the section management page with all sections."""
+        response = self.client.get(self.manage_section_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "manage_section.html")
+        self.assertContains(response, self.section1.section_id)
+        self.assertContains(response, self.section2.section_id)
+        self.assertContains(response, self.course.name)
+
+    def test_post_delete_section(self):
+        """Test that a section can be deleted using a POST request."""
+        response = self.client.post(self.manage_section_url, {
+            "action": "delete",
+            "section_id": self.section1.section_id,
+        })
+
+        self.assertRedirects(response, self.manage_section_url)
+        self.assertFalse(Section.objects.filter(section_id=self.section1.section_id).exists())
+
+    def test_post_delete_nonexistent_section(self):
+        """Test that attempting to delete a nonexistent section returns an error."""
+        response = self.client.post(self.manage_section_url, {
+            "action": "delete",
+            "section_id": "999",  # Nonexistent section_id
+        })
+
+        self.assertRedirects(response, self.manage_section_url)
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertIn("An error occurred", str(messages[0]))
+
+    def test_post_invalid_action(self):
+        """Test that an invalid action does nothing."""
+        response = self.client.post(self.manage_section_url, {
+            "action": "invalid_action",
+            "section_id": self.section1.section_id,
+        })
+
+        self.assertRedirects(response, self.manage_section_url)
+        self.assertTrue(Section.objects.filter(section_id=self.section1.section_id).exists())
+
+    def test_access_denied_for_non_authenticated_user(self):
+        """Test that non-authenticated users cannot access section management."""
+        self.client.logout()
+        response = self.client.get(self.manage_section_url)
+        self.assertEqual(response.status_code, 302)  # Redirect to login
+
+        response = self.client.post(self.manage_section_url, {
+            "action": "delete",
+            "section_id": self.section1.section_id,
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect to login
+
+    def test_post_delete_section_no_permission(self):
+        """Test that non-admin users cannot delete sections."""
+        # Create a non-admin user
+        self.client.logout()
+        non_admin_user = User.objects.create(
+            username="nonadmin",
+            email_address="nonadmin@example.com",
+            is_admin=False
+        )
+        non_admin_user.set_password("password123")
+        non_admin_user.save()
+        self.client.login(username="nonadmin", password="password123")
+
+        response = self.client.post(self.manage_section_url, {
+            "action": "delete",
+            "section_id": self.section1.section_id,
+        })
+
+        self.assertRedirects(response, self.manage_section_url)
+        self.assertTrue(Section.objects.filter(section_id=self.section1.section_id).exists())

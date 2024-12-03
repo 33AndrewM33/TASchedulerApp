@@ -474,7 +474,6 @@ class CreateSectionView(View):
 
         messages.success(request, f"{section_type.capitalize()} section created successfully.")
         return redirect("manage_section")
-
     
 @method_decorator(login_required, name="dispatch")
 class EditSectionView(View):
@@ -558,9 +557,6 @@ class EditSectionView(View):
             courses = Course.objects.all()
             return render(request, "edit_section.html", {"section": section, "courses": courses})
 
-
-
-
 @method_decorator(login_required, name="dispatch")
 class SectionManagement(View):
     def get(self, request):
@@ -571,6 +567,11 @@ class SectionManagement(View):
     def post(self, request):
         action = request.POST.get("action")
         if action == "delete":
+            # Ensure only admin users can delete sections
+            if not request.user.is_admin:
+                messages.error(request, "You do not have permission to delete sections.")
+                return redirect("manage_section")
+            
             section_id = request.POST.get("section_id")
             try:
                 section = get_object_or_404(Section, section_id=section_id)
@@ -581,8 +582,15 @@ class SectionManagement(View):
 
         return redirect("manage_section")
 
+
 @method_decorator(login_required, name="dispatch")
 class DeleteSectionView(View):
+    def dispatch(self, request, *args, **kwargs):
+        if not UtilityFunctions.is_admin(request.user):
+            messages.error(request, "You do not have permission to delete sections.")
+            return redirect("manage_section")
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, section_id):
         return self.delete_section(request, section_id)
 
@@ -597,6 +605,8 @@ class DeleteSectionView(View):
         except Exception as e:
             messages.error(request, f"An error occurred while deleting the section: {e}")
         return redirect("manage_section")
+
+
 
 # -----------------
 # Home webpage
