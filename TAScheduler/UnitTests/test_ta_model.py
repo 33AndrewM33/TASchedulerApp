@@ -1,12 +1,12 @@
 from django.test import TestCase
-from TAScheduler.models import User, TA
+from TAScheduler.models import User, TA, Lab, Section, Course
 
 class TAModelTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create(
             username="tauser",
-            email_address="tauser@example.com",
+            email="tauser@example.com",  # Corrected to 'email'
             password="password123",
             first_name="Test",
             last_name="Assistant",
@@ -21,7 +21,7 @@ class TAModelTests(TestCase):
 
     def test_create_ta(self):
         self.assertEqual(self.ta.user.username, "tauser")
-        self.assertEqual(self.ta.user.email_address, "tauser@example.com")
+        self.assertEqual(self.ta.user.email, "tauser@example.com")  # Corrected to 'email'
         self.assertTrue(self.ta.grader_status)
         self.assertEqual(self.ta.skills, "Python, Django")
         self.assertEqual(self.ta.max_assignments, 4)
@@ -29,7 +29,7 @@ class TAModelTests(TestCase):
     def test_default_grader_status(self):
         user = User.objects.create(
             username="nograder",
-            email_address="nograder@example.com",
+            email="nograder@example.com",  # Corrected to 'email'
             password="password123",
             first_name="No",
             last_name="Grader",
@@ -41,7 +41,7 @@ class TAModelTests(TestCase):
     def test_default_skills(self):
         user = User.objects.create(
             username="noskills",
-            email_address="noskills@example.com",
+            email="noskills@example.com",  # Corrected to 'email'
             password="password123",
             first_name="No",
             last_name="Skills",
@@ -89,7 +89,7 @@ class TAModelTests(TestCase):
     def test_reassign_ta_to_different_user(self):
         new_user = User.objects.create(
             username="newta",
-            email_address="newta@example.com",
+            email="newta@example.com",  # Corrected to 'email'
             password="password123",
             first_name="New",
             last_name="Assistant",
@@ -99,11 +99,9 @@ class TAModelTests(TestCase):
         self.ta.save()
 
         self.assertEqual(self.ta.user.username, "newta")
-        self.assertEqual(self.ta.user.email_address, "newta@example.com")
+        self.assertEqual(self.ta.user.email, "newta@example.com")  # Corrected to 'email'
 
     def test_ta_with_multiple_labs(self):
-        from TAScheduler.models import Lab, Section, Course
-
         course = Course.objects.create(
             course_id="CS101",
             name="Intro to CS",
