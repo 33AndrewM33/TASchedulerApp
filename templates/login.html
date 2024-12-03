@@ -5,29 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Funnel+Display:wght@300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="container">
         <div class="aom">
             <div class="image">
+                <!-- Image for the login page -->
+                <img src="{% static 'images/pc-image.jpg' %}" alt="PC Image" class="login-image">
                 <h2>TA Login</h2>
             </div>
             <form id="loginForm" action="/" method="post">
                 {% csrf_token %}
+                
                 <div class="form-group">
                     <label for="username" class="form-item">Username</label>
                     <input type="text" id="username" name="username" placeholder="Enter your username" required>
                 </div>
+
                 <div class="form-group">
                     <label for="password" class="pdd form-item">Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
-                <a href="/forgot_password/" class="nav-button">Forgot Password?</a>
-                <input type="submit" value="Login" class="nav-button">
+
+                <!-- Forgot Password link with enhanced styling -->
+                <a href="/forgot_password/" class="forgot-password-link">Forgot Password?</a>
+
+                <!-- Login button -->
+                <input type="submit" value="Login" class="nav-button login-btn">
+
+                <!-- Error message if any -->
                 {% if error %}
                 <div class="error">{{ error }}</div>
                 {% endif %}
