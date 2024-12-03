@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotAllowed
 from django.contrib.auth import get_user_model
 from TAScheduler.models import TA, Course, Section, Lab, Lecture, Instructor, Administrator, User
 from django.views.decorators.http import require_http_methods
@@ -591,20 +591,20 @@ class DeleteSectionView(View):
             return redirect("manage_section")
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request, section_id):
-        return self.delete_section(request, section_id)
-
     def post(self, request, section_id):
-        return self.delete_section(request, section_id)
-
-    def delete_section(self, request, section_id):
         try:
+            # Fetch the section
             section = get_object_or_404(Section, id=section_id)
             section.delete()
             messages.success(request, "Section deleted successfully.")
         except Exception as e:
             messages.error(request, f"An error occurred while deleting the section: {e}")
         return redirect("manage_section")
+
+    def get(self, request, section_id):
+        # Explicitly disallow GET requests
+        return HttpResponseNotAllowed(["POST"], "GET method is not allowed for this action.")
+
 
 
 

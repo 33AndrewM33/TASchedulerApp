@@ -846,7 +846,60 @@ class DeleteSectionViewTests(TestCase):
         # Check error message
         messages = list(get_messages(response.wsgi_request))
         self.assertIn("An error occurred while deleting the section:", str(messages[0]))
+        
+    def test_unauthenticated_user_cannot_delete_section(self):
+        """Test that unauthenticated users cannot delete a section."""
+        response = self.client.post(self.delete_section_url)
 
+        # Check redirection to the login page
+        self.assertRedirects(response, f"{reverse('login')}?next={self.delete_section_url}")
+
+        # Verify the section still exists
+        self.assertTrue(Section.objects.filter(id=self.section.id).exists())
+        
+    def test_admin_can_delete_multiple_sections(self):
+        """Test that an admin user can delete multiple sections."""
+        # Create additional sections
+        section2 = Section.objects.create(
+            section_id="102",
+            course=self.course,
+            meeting_time="TTh 2:00PM",
+            location="Room 202",
+        )
+        section3 = Section.objects.create(
+            section_id="103",
+            course=self.course,
+            meeting_time="MWF 3:00PM",
+            location="Room 303",
+        )
+
+        self.client.login(username="admin", password="password123")
+
+        # Delete the first section
+        response1 = self.client.post(reverse("delete_section", args=[self.section.id]))
+        self.assertRedirects(response1, reverse("manage_section"))
+        self.assertFalse(Section.objects.filter(id=self.section.id).exists())
+
+        # Delete the second section
+        response2 = self.client.post(reverse("delete_section", args=[section2.id]))
+        self.assertRedirects(response2, reverse("manage_section"))
+        self.assertFalse(Section.objects.filter(id=section2.id).exists())
+
+        # Delete the third section
+        response3 = self.client.post(reverse("delete_section", args=[section3.id]))
+        self.assertRedirects(response3, reverse("manage_section"))
+        self.assertFalse(Section.objects.filter(id=section3.id).exists())
+
+    def test_invalid_http_method(self):
+        """Test that using an invalid HTTP method for delete returns a proper response."""
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(self.delete_section_url)
+
+        # Check for method not allowed (405 status code)
+        self.assertEqual(response.status_code, 405)
+
+        # Verify the section still exists
+        self.assertTrue(Section.objects.filter(id=self.section.id).exists())
 
 class SectionManagementTests(TestCase):
     def setUp(self):
