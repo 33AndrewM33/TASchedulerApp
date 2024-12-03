@@ -234,11 +234,14 @@ def account_management(request):
                 messages.error(request, f"Error updating user: {str(e)}")
     users = User.objects.all()
     return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
+#assigning ta or instructor to a course or lab
 
 # ----------------------------------------
 # Authentication Views
 # ----------------------------------------
-
+def assign_user_role(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    return render(request, 'assign_role.html', {'user': user})
 def custom_login(request):
     if request.user.is_authenticated:
         return redirect('/home/')
@@ -262,7 +265,23 @@ def custom_logout(request):
 def home(request):
     storage = messages.get_messages(request)
     storage.used = True
-    return render(request, 'home.html', {"user": request.user})
+
+    # Check user role and display appropriate message
+    if request.user.is_ta:
+        message = f"Welcome TA {request.user.username}! This page will display the lab assignments that will be developed in Sprint 2."
+        show_navigation = False  # Hide navigation for TA
+    elif request.user.is_instructor:
+        message = f"Welcome Instructor {request.user.username}! This page will display the courses assigned to you by the admin and the sections you're in."
+        show_navigation = False  # Hide navigation for Instructor
+    else:
+        message = "Welcome Admin! You have full access to manage the system."
+        show_navigation = True  # Show navigation for Admin
+
+    return render(request, 'home.html', {
+        "user": request.user,
+        "message": message,
+        "show_navigation": show_navigation
+    })
 
 def forgot_password(request):
     error = None

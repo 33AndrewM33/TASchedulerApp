@@ -26,6 +26,7 @@ urlpatterns = [
     # Account Management
     path('home/accountmanagement/', views.account_management, name='account_management'),
     path('home/accountmanagement/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('assign/<int:user_id>/', views.assign_user_role, name='assign_user_role'),
 
     # Forgot Password
     path('forgot_password/', views.forgot_password, name='forgot_password'),

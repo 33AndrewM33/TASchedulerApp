@@ -39,6 +39,13 @@
                                 <form method="GET" action="{% url 'edit_user' user.id %}" style="display: inline;">
                                     <button type="submit" class="edit-button">Edit</button>
                                 </form>
+
+                                {% if user.is_ta or user.is_instructor %}
+                                    <!-- Assign Button for TA and Instructor only -->
+                                    <form method="GET" action="{% url 'assign_user_role' user.id %}" style="display: inline;">
+                                        <button type="submit" class="assign-button">Assign</button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -50,7 +57,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div>
             <!-- Create User Form -->
             <h2>Create New User</h2>
@@ -75,7 +82,7 @@
                 <button type="submit" name="action" value="create" class="create-button">Create User</button>
             </form>
         </div>
-        
+
         <div>
             <a href="/home/" class="back-link">Back to Home</a>
         </div>
