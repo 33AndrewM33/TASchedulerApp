@@ -579,21 +579,22 @@ class DeleteSectionView(View):
             return redirect("manage_section")
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request, section_id):
+    def post(self, request, section_id):
         try:
             # Fetch the section
             section = get_object_or_404(Section, id=section_id)
 
-            # Confirm or delete the section directly on GET
+            # Delete the section
             section.delete()
             messages.success(request, "Section deleted successfully.")
         except Exception as e:
             messages.error(request, f"An error occurred while deleting the section: {e}")
         return redirect("manage_section")
 
-    def post(self, request, section_id):
-        # Keep POST functionality if needed
-        return self.get(request, section_id)
+    def get(self, request, section_id):
+        # Do not allow deletion through GET
+        return HttpResponseNotAllowed(["POST"], "GET method is not allowed for this action.")
+
 
 
 

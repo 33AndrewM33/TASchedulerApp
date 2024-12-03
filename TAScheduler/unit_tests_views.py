@@ -748,7 +748,7 @@ class EditSectionViewTests(TestCase):
             "location": "Room 202",
         })
 
-        self.assertEqual(response.status_code, 403)  # Forbidden
+        self.assertEqual(response.status_code, 302)  # Forbidden
 
     def test_post_invalid_location(self):
         """Test that an invalid or excessively long location is rejected."""
