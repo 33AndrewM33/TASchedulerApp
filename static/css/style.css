@@ -287,3 +287,36 @@ a:hover {
         margin-bottom: 10px;
     }
 }
+.save-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.save-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.create-button {
+    display: inline-block; /* Ensure it behaves like a button */
+    text-align: center;
+    background-color: #000; /* Black background */
+    color: #fff; /* White text */
+    font-weight: bold;
+    padding: 10px 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    text-decoration: none; /* Remove underline */
+    transition: all 0.3s ease;
+}
+
+.create-button:hover {
+    background-color: #333; /* Darker black for hover */
+    transform: scale(1.1);
+}
