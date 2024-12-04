@@ -97,8 +97,135 @@ class LoginManagementTest(TestCase):
         self.assertRedirects(response, self.login_url)
         self.assertFalse(response.wsgi_request.user.is_authenticated)
 
+class CourseCreationViewTest(TestCase):
+    def setUp(self):
+        self.url = reverse("course-create")
+        self.admin_user = User.objects.create_user(
+            username="admin", email="admin@test.com", password="password", is_admin=True
+        )
+        self.instructor_user = User.objects.create_user(
+            username="instructor", email="instructor@test.com", password="password", is_instructor=True
+        )
+        self.ta_user = User.objects.create_user(
+            username="ta", email="ta@test.com", password="password", is_ta=True
+        )
 
+    def test_get_request_with_admin_user(self):
+        self.client.login(username="admin", password="password")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_course.html")
 
+    def test_get_request_with_instructor_user(self):
+        self.client.login(username="instructor", password="password")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_course.html")
+
+    def test_get_request_with_ta_user(self):
+        self.client.login(username="ta", password="password")
+        response = self.client.get(self.url)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("You do not have permission to create courses.", messages)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "create_course.html")
+
+    def test_post_request_with_valid_data(self):
+        self.client.login(username="admin", password="password")
+        data = {
+            "course_id": "CS101",
+            "semester": "Fall 2024",
+            "name": "Introduction to Computer Science",
+            "description": "A basic CS course.",
+            "num_of_sections": "2",
+            "modality": "Online",
+        }
+        response = self.client.post(self.url, data)
+        self.assertRedirects(response, reverse("manage_course"))
+        self.assertTrue(Course.objects.filter(course_id="CS101").exists())
+
+    def test_post_request_with_duplicate_course_id(self):
+        self.client.login(username="admin", password="password")
+        Course.objects.create(
+            course_id="CS101",
+            semester="Fall 2024",
+            name="Intro to CS",
+            description="Description",
+            num_of_sections=2,
+            modality="Online",
+        )
+        data = {
+            "course_id": "CS101",
+            "semester": "Fall 2024",
+            "name": "Introduction to Computer Science",
+            "description": "A basic CS course.",
+            "num_of_sections": "2",
+            "modality": "Online",
+        }
+        response = self.client.post(self.url, data)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("Course ID CS101 already exists.", messages)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_request_with_missing_fields(self):
+        self.client.login(username="admin", password="password")
+        data = {
+            "course_id": "CS102",
+            "semester": "",
+            "name": "Data Structures",
+            "description": "Intermediate CS course.",
+            "num_of_sections": "3",
+            "modality": "Online",
+        }
+        response = self.client.post(self.url, data)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("All fields are required.", messages)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_request_with_invalid_modality(self):
+        self.client.login(username="admin", password="password")
+        data = {
+            "course_id": "CS103",
+            "semester": "Fall 2024",
+            "name": "Algorithms",
+            "description": "Advanced CS course.",
+            "num_of_sections": "3",
+            "modality": "Hybrid",
+        }
+        response = self.client.post(self.url, data)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("Select a valid choice.", messages)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_request_with_non_numeric_sections(self):
+        self.client.login(username="admin", password="password")
+        data = {
+            "course_id": "CS104",
+            "semester": "Fall 2024",
+            "name": "Operating Systems",
+            "description": "Systems-level CS course.",
+            "num_of_sections": "five",
+            "modality": "Online",
+        }
+        response = self.client.post(self.url, data)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("Number of sections must be a valid integer.", messages)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_request_with_excessive_sections(self):
+        self.client.login(username="admin", password="password")
+        data = {
+            "course_id": "CS105",
+            "semester": "Fall 2024",
+            "name": "Advanced Topics",
+            "description": "Special topics in CS.",
+            "num_of_sections": "101",
+            "modality": "Online",
+        }
+        response = self.client.post(self.url, data)
+        messages = [msg.message for msg in get_messages(response.wsgi_request)]
+        self.assertIn("Ensure this value is less than or equal to 100.", messages)
+        self.assertEqual(response.status_code, 200)
 
 class TestAccountManagement(TestCase):
         def setUp(self):

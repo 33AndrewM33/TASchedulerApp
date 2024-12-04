@@ -295,13 +295,21 @@ class AssignTAToLectureView(View):
 # Course Views
 # -----------------
 
-@method_decorator([login_required, user_passes_test(UtilityFunctions.is_admin_or_instructor)], name="dispatch")
+@method_decorator(login_required, name='dispatch')
 class CourseCreation(View):
     def get(self, request):
-        return render(request, "create_course.html")  # Ensure this template exists
+        courses = Course.objects.all()
+        if not self._user_has_permission(request.user):
+            messages.error(request, "You do not have permission to create courses.")
+            return render(request, "create_course.html", {"error": True})
+        return render(request, "create_course.html")
 
     def post(self, request):
-        # Handle course creation
+        if not self._user_has_permission(request.user):
+            messages.error(request, "You do not have permission to create courses.")
+            return render(request, "create_course.html", {"error": True})
+
+        # Extract data from the form
         course_id = request.POST.get("course_id")
         semester = request.POST.get("semester")
         name = request.POST.get("name")
@@ -309,9 +317,32 @@ class CourseCreation(View):
         num_of_sections = request.POST.get("num_of_sections")
         modality = request.POST.get("modality")
 
-        if not all([course_id, semester, name, num_of_sections, modality]):
-            return HttpResponseBadRequest("Missing required fields")
+        # Validate modality
+        valid_modalities = ["Online", "In-person"]
+        if modality not in valid_modalities:
+            messages.error(request, "Select a valid choice.")
+            return render(request, "create_course.html", {"error": True})
 
+        # Validate number of sections
+        if not num_of_sections.isdigit():
+            messages.error(request, "Number of sections must be a valid integer.")
+            return render(request, "create_course.html", {"error": True})
+
+        num_of_sections = int(num_of_sections)
+        if num_of_sections > 100:
+            messages.error(request, "Ensure this value is less than or equal to 100.")
+            return render(request, "create_course.html", {"error": True})
+
+        # Validate inputs
+        if not all([course_id, semester, name, num_of_sections, modality]):
+            messages.error(request, "All fields are required.")
+            return render(request, "create_course.html", {"error": True})
+
+        if Course.objects.filter(course_id=course_id).exists():
+            messages.error(request, f"Course ID {course_id} already exists.")
+            return render(request, "create_course.html")
+
+        # Save the new course
         Course.objects.create(
             course_id=course_id,
             semester=semester,
@@ -320,7 +351,22 @@ class CourseCreation(View):
             num_of_sections=num_of_sections,
             modality=modality,
         )
-        return redirect("course-list")  # Redirect after success
+        messages.success(request, "Course created successfully.")
+        return redirect("manage_course")  # Redirect to the Course Management page
+
+    def _user_has_permission(self, user):
+        # Replace with your actual permission logic
+        return hasattr(user, 'is_admin') and user.is_admin or hasattr(user, 'is_instructor') and user.is_instructor
+
+
+
+
+
+
+
+
+
+
 
 @method_decorator(login_required, name="dispatch")
 class EditCourse(View):
