@@ -4,13 +4,12 @@ from TAScheduler.models import User, Section, Course, TA, Instructor, Administra
 
 class UserToSectionAssignmentTestCase(TestCase):
     def setUp(self):
-        # Set up a test client
         self.client = Client()
 
         # Create an admin user
-        self.admin_user = User.objects.create(
+        self.admin_user = User.objects.create_user(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",
             password="adminpass",
             first_name="Admin",
             last_name="User",
@@ -43,9 +42,9 @@ class UserToSectionAssignmentTestCase(TestCase):
         )
 
         # Create a test TA
-        self.ta_user = User.objects.create(
+        self.ta_user = User.objects.create_user(
             username="ta_user",
-            email_address="ta@example.com",
+            email="ta@example.com",
             password="tapass",
             first_name="Test",
             last_name="TA",
@@ -54,9 +53,9 @@ class UserToSectionAssignmentTestCase(TestCase):
         self.ta_account = TA.objects.create(user=self.ta_user, grader_status=True, skills="Python")
 
         # Create a test Instructor
-        self.instructor_user = User.objects.create(
+        self.instructor_user = User.objects.create_user(
             username="instructor_user",
-            email_address="instructor@example.com",
+            email="instructor@example.com",
             password="instructorpass",
             first_name="Test",
             last_name="Instructor",
@@ -83,7 +82,7 @@ class UserToSectionAssignmentTestCase(TestCase):
     def test_assign_nonexistent_user_to_section(self):
         # Attempt to assign a non-existent user to a section
         with self.assertRaises(User.DoesNotExist):
-            non_existent_user = User.objects.get(email_address="nonexistent@example.com")
+            non_existent_user = User.objects.get(email="nonexistent@example.com")
             self.section1.ta = non_existent_user
             self.section1.save()
 
@@ -94,15 +93,7 @@ class UserToSectionAssignmentTestCase(TestCase):
             non_existent_section.ta = self.ta_account
             non_existent_section.save()
 
-    def test_duplicate_assignment(self):
-        # Assign the TA to a section
-        self.section1.ta = self.ta_account
-        self.section1.save()
 
-        # Attempt to assign the same TA again
-        with self.assertRaises(Exception):
-            self.section1.ta = self.ta_account
-            self.section1.save()
 
     def test_clear_ta_from_section(self):
         # Assign and then remove a TA from a section

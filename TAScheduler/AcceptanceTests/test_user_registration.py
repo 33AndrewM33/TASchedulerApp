@@ -10,4 +10,4 @@ class UserModelTests(TestCase):
             password="password123"
         )
         self.assertEqual(user.username, "testuser")
-        self.assertEqual(user.email_address, "testuser@example.com")
+        self.assertEqual(user.email, "testuser@example.com")
