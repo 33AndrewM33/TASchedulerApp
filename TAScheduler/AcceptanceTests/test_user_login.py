@@ -1,14 +1,14 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
+from TAScheduler.models import User  # Use your custom User model
 from django.contrib.auth import authenticate
 
 class UserLoginTest(TestCase):
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(
+        self.user = User.objects.create_user(
             username='testuser',
-            email_address='testuser@example.com',
+            email='testuser@example.com',
             password='password123',
             first_name='Test',
             last_name='User'
@@ -21,7 +21,7 @@ class UserLoginTest(TestCase):
             'password': 'password123'
         }
         response = self.client.post(url, data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect upon successful login
         user = authenticate(username='testuser', password='password123')
         self.assertIsNotNone(user)
         self.assertEqual(user.username, 'testuser')
@@ -33,5 +33,5 @@ class UserLoginTest(TestCase):
             'password': 'wrongpassword'
         }
         response = self.client.post(url, data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)  # Expecting the login page to reload
         self.assertContains(response, 'Invalid username or password')

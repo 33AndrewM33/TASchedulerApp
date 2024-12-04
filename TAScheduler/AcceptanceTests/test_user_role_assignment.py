@@ -6,7 +6,7 @@ class UserRoleAssignmentTests(TestCase):
     def test_user_role_assignment_admin(self):
         user = User.objects.create(
             username="adminuser",
-            email_address="admin@example.com",
+            email="admin@example.com",
             password="password123",
             is_admin=True
         )
@@ -16,7 +16,7 @@ class UserRoleAssignmentTests(TestCase):
     def test_user_role_assignment_instructor(self):
         user = User.objects.create(
             username="instructor",
-            email_address="instructor@example.com",
+            email="instructor@example.com",
             password="password123",
             is_instructor=True
         )
@@ -26,7 +26,7 @@ class UserRoleAssignmentTests(TestCase):
     def test_user_role_assignment_ta(self):
         user = User.objects.create(
             username="tauser",
-            email_address="ta@example.com",
+            email="ta@example.com",
             password="password123",
             is_ta=True
         )
@@ -36,7 +36,7 @@ class UserRoleAssignmentTests(TestCase):
     def test_user_role_assignment_no_role(self):
         user = User.objects.create(
             username="norole",
-            email_address="norole@example.com",
+            email="norole@example.com",
             password="password123"
         )
         self.assertFalse(user.is_admin)
