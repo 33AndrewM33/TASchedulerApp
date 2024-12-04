@@ -219,6 +219,25 @@ class AccountCreation(View):
         return redirect("home")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # -----------------
 # Logging in and out controls
 # -----------------
@@ -357,15 +376,6 @@ class CourseCreation(View):
     def _user_has_permission(self, user):
         # Replace with your actual permission logic
         return hasattr(user, 'is_admin') and user.is_admin or hasattr(user, 'is_instructor') and user.is_instructor
-
-
-
-
-
-
-
-
-
 
 
 @method_decorator(login_required, name="dispatch")
@@ -596,7 +606,6 @@ class EditSectionView(View):
         """Helper method to render the edit section form with courses."""
         courses = Course.objects.all()
         return render(request, "edit_section.html", {"section": section, "courses": courses})
-
 
 @method_decorator(login_required, name="dispatch")
 class SectionManagement(View):
