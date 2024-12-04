@@ -4,64 +4,41 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create a New Course</title>
+    <title>Create Course</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="container">
-        <h1>Create a New Course</h1>
-
-        <!-- Back to Home Button -->
-        <a href="{% url 'home' %}" class="btn btn-back">Back to Home</a>
-
-        <!-- Display any error messages -->
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        <!-- Form for creating a course -->
-        <form method="POST" action="{% url 'course-create' %}" class="form-create">
+        <h1>Create New Course</h1>
+        <form method="POST" class="course-form">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="course_id">Course ID:</label>
-                <input type="text" id="course_id" name="course_id" required>
-            </div>
+            <label for="course_id">Course ID:</label>
+            <input type="text" id="course_id" name="course_id" class="form-control" required /><br/>
 
-            <div class="form-group">
-                <label for="semester">Semester:</label>
-                <input type="text" id="semester" name="semester" required>
-            </div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" class="form-control" required /><br/>
 
-            <div class="form-group">
-                <label for="name">Course Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
+            <label for="semester">Semester:</label>
+            <select name="semester" id="semester" class="form-control">
+                <option value="Fall">Fall</option>
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+            </select><br/>
 
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="4" required></textarea>
-            </div>
+            <label for="modality">Modality:</label>
+            <select name="modality" id="modality" class="form-control">
+                <option value="Online">Online</option>
+                <option value="In-person">In-person</option>
+            </select><br/>
 
-            <div class="form-group">
-                <label for="num_of_sections">Number of Sections:</label>
-                <input type="number" id="num_of_sections" name="num_of_sections" min="0" required>
-            </div>
+            <label for="num_of_sections">Number of Sections:</label>
+            <input type="number" id="num_of_sections" name="num_of_sections" class="form-control" min="1" required /><br/>
 
-            <div class="form-group">
-                <label for="modality">Modality:</label>
-                <select id="modality" name="modality" required>
-                    <option value="In-person">In-person</option>
-                    <option value="Online">Online</option>
-                </select>
-            </div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" class="form-control"></textarea><br/>
 
-            <div class="form-group">
-                <button type="submit" class="btn btn-create">Create Course</button>
-            </div>
+            <button type="submit" class="btn btn-submit">Create Course</button>
+            <a href="{% url 'manage_course' %}" class="btn btn-cancel">Cancel</a>
         </form>
     </div>
 </body>

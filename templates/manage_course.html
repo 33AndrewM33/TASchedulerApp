@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Management</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/course_management.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="container">
@@ -55,10 +55,7 @@
                     <td>{{ course.num_of_sections }}</td>
                     <td>
                         <a href="{% url 'edit_course' course.course_id %}" class="btn btn-edit">Edit</a>
-                        <form method="POST" action="{% url 'course-delete' course.pk %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" onclick="return confirm('Are you sure?')" class="btn btn-delete">Delete</button>
-                        </form>
+                        <a href="{% url 'delete_course' course.course_id %}" onclick="return confirm('Are you sure?')" class="btn btn-delete">Delete</a>
                     </td>
                 </tr>
                 {% empty %}
@@ -68,10 +65,9 @@
                 {% endfor %}
             </tbody>
         </table>
-        
 
         <!-- Create New Course Button -->
-        <a href="{% url 'course-create' %}" class="btn btn-create highlighted-button">Create New Course</a>
+        <a href="{% url 'create_course' %}" class="btn btn-create highlighted-button">Create New Course</a>
     </div>
 </body>
 </html>

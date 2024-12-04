@@ -10,48 +10,35 @@
 <body>
     <div class="container">
         <h1>Edit Course</h1>
-        <a href="{% url 'home' %}" class="btn btn-back">Back to Home</a>
-
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-
-        <form method="POST" action="{% url 'edit_course' course.course_id %}" class="form-create">
+        <form method="POST" class="course-form">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="course_id">Course ID:</label>
-                <input type="text" id="course_id" name="course_id" value="{{ course.course_id }}" readonly>
-            </div>
-            <div class="form-group">
-                <label for="semester">Semester:</label>
-                <input type="text" id="semester" name="semester" value="{{ course.semester }}" required>
-            </div>
-            <div class="form-group">
-                <label for="name">Course Name:</label>
-                <input type="text" id="name" name="name" value="{{ course.name }}" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" rows="4" required>{{ course.description }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="num_of_sections">Number of Sections:</label>
-                <input type="number" id="num_of_sections" name="num_of_sections" value="{{ course.num_of_sections }}" min="0" required>
-            </div>
-            <div class="form-group">
-                <label for="modality">Modality:</label>
-                <select id="modality" name="modality" required>
-                    <option value="In-person" {% if course.modality == "In-person" %}selected{% endif %}>In-person</option>
-                    <option value="Online" {% if course.modality == "Online" %}selected{% endif %}>Online</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn btn-create">Save Changes</button>
-            </div>
+            <label for="course_id">Course ID:</label>
+            <input type="text" id="course_id" name="course_id" class="form-control" value="{{ course.course_id }}" readonly /><br/>
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ course.name }}" required /><br/>
+
+            <label for="semester">Semester:</label>
+            <select name="semester" id="semester" class="form-control">
+                <option value="Fall" {% if course.semester == "Fall" %}selected{% endif %}>Fall</option>
+                <option value="Spring" {% if course.semester == "Spring" %}selected{% endif %}>Spring</option>
+                <option value="Summer" {% if course.semester == "Summer" %}selected{% endif %}>Summer</option>
+            </select><br/>
+
+            <label for="modality">Modality:</label>
+            <select name="modality" id="modality" class="form-control">
+                <option value="Online" {% if course.modality == "Online" %}selected{% endif %}>Online</option>
+                <option value="In-person" {% if course.modality == "In-person" %}selected{% endif %}>In-person</option>
+            </select><br/>
+
+            <label for="num_of_sections">Number of Sections:</label>
+            <input type="number" id="num_of_sections" name="num_of_sections" class="form-control" value="{{ course.num_of_sections }}" min="1" required /><br/>
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" class="form-control">{{ course.description }}</textarea><br/>
+
+            <button type="submit" class="btn btn-submit">Save Changes</button>
+            <a href="{% url 'manage_course' %}" class="btn btn-cancel">Cancel</a>
         </form>
     </div>
 </body>
