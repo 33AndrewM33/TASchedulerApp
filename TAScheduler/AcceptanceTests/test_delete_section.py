@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.contrib.messages import get_messages
 from django.test import TestCase, Client
 from TAScheduler.models import Section, Course, Lecture, Lab, Administrator, User
 
@@ -8,18 +9,19 @@ class SuccessDeleteSectionTestCase(TestCase):
         # Set up the client and administrator
         self.client = Client()
         self.admin_user = Administrator.objects.create(
-            user=User.objects.create(
+            user=User.objects.create_user(
                 username="admin",
-                email_address="admin@example.com",
-                password="adminpassword",
+                email="admin@example.com",
                 first_name="Admin",
                 last_name="User",
                 home_address="123 Admin St",
                 phone_number="1234567890",
+                password="adminpassword",
                 is_admin=True,
             )
         )
-        self.client.login(username=self.admin_user.user.username, password="adminpassword")
+
+        self.client.login(username="admin", password="adminpassword")
 
         # Create courses and sections
         self.courses = []
@@ -45,21 +47,48 @@ class SuccessDeleteSectionTestCase(TestCase):
             self.sections.append(section)
 
     def test_correct_delete(self):
-        response = self.client.post("/home/managesection/", data={"section_id": self.sections[0].section_id, "delete": "Delete"})
+        # Send a POST request to the delete URL for the section
+        response = self.client.post(f"/home/managesection/delete/{self.sections[0].id}/", follow=True)
+
+        # Fetch all remaining sections
         remaining_sections = Section.objects.all()
 
+        # Verify the deleted section is no longer in the database
         self.assertNotIn(self.sections[0], remaining_sections, "The deleted section should not exist in the database.")
 
     def test_correct_num_sections(self):
+        # Get the initial count of sections
         initial_count = Section.objects.count()
-        response = self.client.post("/home/managesection/", data={"section_id": self.sections[0].section_id, "delete": "Delete"})
+
+        # Send a POST request to the correct delete URL for the section
+        response = self.client.post(f"/home/managesection/delete/{self.sections[0].id}/", follow=True)
+
+        # Get the final count of sections
         final_count = Section.objects.count()
 
-        self.assertEqual(final_count, initial_count - 1, "The number of sections in the database should decrease by one.")
+        # Check that the count has decreased by one
+        self.assertEqual(final_count, initial_count - 1,
+                         "The number of sections in the database should decrease by one.")
 
     def test_confirm_delete_message(self):
-        response = self.client.post("/home/managesection/", data={"section_id": self.sections[0].section_id, "delete": "Delete"})
-        self.assertContains(response, "Successfully Deleted Section")
+        # Send a POST request to delete the section
+        response = self.client.post(f"/home/managesection/delete/{self.sections[0].id}/", follow=True)
+
+        # Ensure the response followed the redirect
+        self.assertEqual(response.status_code, 200, "Expected status code 200 after following the redirect.")
+
+        # Verify the section no longer exists in the database
+        self.assertFalse(
+            Section.objects.filter(id=self.sections[0].id).exists(),
+            "Section was not deleted from the database."
+        )
+
+        # Check for the success message in the response
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any(f"Section {self.sections[0].section_id} deleted successfully." in str(message) for message in messages),
+            "Expected success message not found in messages."
+        )
 
     def test_no_course_deleted(self):
         associated_course = self.sections[0].course

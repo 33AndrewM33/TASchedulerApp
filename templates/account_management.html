@@ -14,7 +14,7 @@
         <div>
             <!-- User Table -->
             <h2>Existing Users</h2>
-            <table border="1" class="user-table">
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>Username</th>
@@ -28,17 +28,24 @@
                         {% for user in users %}
                         <tr>
                             <td>{{ user.username }}</td>
-                            <td>{{ user.email_address }}</td>
+                            <td>{{ user.email }}</td>
                             <td>{{ user.get_role }}</td>
                             <td>
                                 <form method="POST" action="" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="user_id" value="{{ user.id }}">
-                                    <button type="submit" name="action" value="delete" class="delete-button">Delete</button>
+                                    <button type="submit" name="action" value="delete" class="delete-btn">Delete</button>
                                 </form>
                                 <form method="GET" action="{% url 'edit_user' user.id %}" style="display: inline;">
-                                    <button type="submit" class="edit-button">Edit</button>
+                                    <button type="submit" class="edit-btn">Edit</button>
                                 </form>
+
+                                {% if user.is_ta or user.is_instructor %}
+                                    <!-- Assign Button for TA and Instructor only -->
+                                    <form method="GET" action="{% url 'assign_user_role' user.id %}" style="display: inline;">
+                                        <button type="submit" class="submit-btn">Assign</button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -50,7 +57,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div>
             <!-- Create User Form -->
             <h2>Create New User</h2>
@@ -72,12 +79,12 @@
                     <option value="administrator">Administrator</option>
                 </select><br>
 
-                <button type="submit" name="action" value="create" class="create-button">Create User</button>
+                <button type="submit" name="action" value="create" class="btn-create">Create User</button>
             </form>
         </div>
-        
+
         <div>
-            <a href="/home/" class="back-link">Back to Home</a>
+            <a href="/home/" class="btn-back">Back to Home</a>
         </div>
     </div>
 </body>

@@ -1,44 +1,33 @@
 from django.contrib import admin
-from django.shortcuts import render
 from django.urls import path
-from TAScheduler import views
-from TAScheduler.views import (
-    AccountCreation, AssignTAToLabView, AssignTAToLectureView, CourseCreation, 
-    CourseManagement, CreateSectionView, DeleteCourseView, DeleteSectionView, EditCourse, EditSectionView, EditUserView, ForgotPasswordView, HomeView, LoginManagement, 
-    LogoutManagement, SectionManagement, AccountManagement
-)
+from TAScheduler import views  # Import your custom views
 
 urlpatterns = [
+    # Admin Panel
     path('admin/', admin.site.urls),
-    path('', LoginManagement.as_view(), name='login'),  # Login page
-    path('logout/', LogoutManagement.as_view(), name='logout'),  # Logout page
 
-    # Home and Dashboard
-    path('home/', HomeView.as_view(), name='home'),  # Home page,  # Home page
-    path('home/managecourse/', CourseManagement.as_view(), name='manage_course'),  # Course management
-    path('home/managesection/', SectionManagement.as_view(), name='manage_section'),  # Section management
-    path("home/managesection/create/", CreateSectionView.as_view(), name="create_section"),
+    # Authentication Views
+    path('', views.custom_login, name='login'),  # Root path for login page
+    path('logout/', views.custom_logout, name='logout'),  # Logout
+    path('home/', views.home, name='home'),  # Home page
 
-    path("edit_section/<int:section_id>/", EditSectionView.as_view(), name="edit_section"),
-    path("delete_section/<int:section_id>/", DeleteSectionView.as_view(), name="delete_section"),
+    # Course Management
+    path('home/managecourse/', views.manage_course, name='manage_course'),
+    path('home/managecourse/create/', views.create_course, name='create_course'),
+    path('home/managecourse/edit/<str:course_id>/', views.edit_course, name='edit_course'),
+    path('home/managecourse/delete/<str:course_id>/', views.delete_course, name='delete_course'),
 
-    # Course Editing and Creation
-    path("home/managecourse/edit/<str:course_id>/", EditCourse.as_view(), name="edit_course"),
-    path('courses/create/', CourseCreation.as_view(), name='course-create'),  # Create course
-    path('courses/', CourseCreation.as_view(), name='course-list'),  # List courses
-    path('courses/<int:pk>/delete/', DeleteCourseView.as_view(), name='course-delete'),  # Delete course
-
-    # TA and Lecture Management
-    path("labs/<int:lab_id>/assign-ta/", AssignTAToLabView.as_view(), name="assign-ta-to-lab"),
-    path("lectures/<int:lecture_id>/assign-ta/", AssignTAToLectureView.as_view(), name="assign-ta-to-lecture"),
-    path("labs/", lambda request: render(request, "lab_list.html"), name="lab-list"),
-    path("lectures/", lambda request: render(request, "lecture_list.html"), name="lecture-list"),
+    # Section Management
+    path('home/managesection/', views.manage_section, name='manage_section'),
+    path('home/managesection/create/', views.create_section, name='create_section'),
+    path('home/managesection/edit/<int:section_id>/', views.edit_section, name='edit_section'),
+    path('home/managesection/delete/<int:section_id>/', views.delete_section, name='delete_section'),
 
     # Account Management
-    path("create-account/", AccountCreation.as_view(), name="create-account"),
-    path('home/accountmanagement/', AccountManagement.as_view(), name='account_management'),
-    path("home/accountmanagement/edit/<int:user_id>/", EditUserView.as_view(), name="edit_user"),  # Edit user
+    path('home/accountmanagement/', views.account_management, name='account_management'),
+    path('home/accountmanagement/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('assign/<int:user_id>/', views.assign_user_role, name='assign_user_role'),
 
     # Forgot Password
-    path('forgot_password/', ForgotPasswordView.as_view(), name='forgot_password'),
+    path('forgot_password/', views.forgot_password, name='forgot_password'),
 ]

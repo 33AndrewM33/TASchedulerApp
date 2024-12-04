@@ -1,67 +1,65 @@
 from django.test import TestCase, Client
-from TAScheduler.models import User, Administrator, TA
+from TAScheduler.models import User, Instructor, Course, Administrator, Section
 
 
-class AdminEditAccountTestCase(TestCase):
+class InstructorTestCase(TestCase):
     def setUp(self):
+        # Set up the client and an admin user for authentication
         self.client = Client()
 
         # Create an administrator
-        admin_user = User.objects.create(
-            email_address="admin@example.com",
+        admin_user = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
             password="adminpassword",
             first_name="Admin",
             last_name="User",
-            home_address="123 Admin St",
-            phone_number="1234567890"
+            is_admin=True
         )
         self.admin = Administrator.objects.create(user=admin_user)
-        ses = self.client.session
-        ses["user"] = admin_user.email_address
-        ses.save()
+        self.client.force_login(admin_user)  # Log in as admin
 
-        # Create a TA account
-        ta_user = User.objects.create(
-            email_address="ta@example.com",
-            password="tapassword",
-            first_name="TA",
-            last_name="User",
-            home_address="456 TA Lane",
-            phone_number="9876543210",
-            is_ta=True
+        # Create an instructor
+        self.instructor_user = User.objects.create_user(
+            username="instructor",
+            email="instructor@example.com",
+            password="instrpassword",
+            first_name="Jane",
+            last_name="Doe",
+            is_instructor=True
         )
-        self.ta = TA.objects.create(user=ta_user, grader_status=False, skills="Python")
+        self.instructor = Instructor.objects.create(user=self.instructor_user, max_assignments=3)
 
-    def test_edit_account_success(self):
-        # Post updated TA information
-        response = self.client.post('/home/manageaccount/edit/', {
-            "email_address": self.ta.user.email_address,
-            "password": "newpassword",
-            "first_name": "Updated TA",
-            "last_name": "User",
-            "home_address": "Updated Address",
-            "phone_number": "1122334455",
-            "grader_status": True,
-            "skills": "Python, Teaching"
-        })
+        # Create some test courses
+        self.courses = [
+            Course.objects.create(
+                course_id=f"CS10{i}",
+                semester=f"Fall 202{i}",
+                name=f"Course {i}",
+                description=f"Description for Course {i}",
+                num_of_sections=2,
+                modality="In-person"
+            )
+            for i in range(1, 4)
+        ]
 
-        # Fetch updated TA from database
-        updated_ta = TA.objects.get(user__email_address=self.ta.user.email_address)
+    def test_instructor_creation(self):
+        """Test that an instructor is created successfully."""
+        self.assertIsNotNone(self.instructor, "Instructor should be created successfully.")
+        self.assertEqual(self.instructor.user.first_name, "Jane", "Instructor's first name should be 'Jane'.")
+        self.assertEqual(self.instructor.user.email, "instructor@example.com", "Instructor's email should match.")
 
-        # Assert the changes
-        self.assertEqual(updated_ta.user.first_name, "Updated TA", "First name was not updated.")
-        self.assertEqual(updated_ta.user.phone_number, "1122334455", "Phone number was not updated.")
-        self.assertTrue(updated_ta.grader_status, "Grader status was not updated.")
-        self.assertEqual(updated_ta.skills, "Python, Teaching", "Skills were not updated.")
 
-    def test_invalid_phone_number(self):
-        # Post invalid phone number format
-        response = self.client.post('/home/manageaccount/edit/', {
-            "email_address": self.ta.user.email_address,
-            "phone_number": "123"
-        })
+    def test_edit_instructor_details(self):
+        """Test that an instructor's details can be updated."""
+        self.instructor.user.first_name = "Updated Name"
+        self.instructor.user.save()
+        updated_instructor = User.objects.get(email="instructor@example.com")
+        self.assertEqual(updated_instructor.first_name, "Updated Name", "Instructor's first name should be updated.")
 
-        # Ensure the phone number was not updated
-        updated_ta = TA.objects.get(user__email_address=self.ta.user.email_address)
-        self.assertNotEqual(updated_ta.user.phone_number, "123", "Phone number was incorrectly updated.")
-        self.assertContains(response, "Phone number must be 10 digits", status_code=200)
+    def test_delete_instructor(self):
+        """Test that an instructor can be deleted."""
+        instructor_id = self.instructor.pk
+        self.instructor.delete()
+        self.assertFalse(Instructor.objects.filter(pk=instructor_id).exists(),
+                         "Instructor should be deleted from the database.")

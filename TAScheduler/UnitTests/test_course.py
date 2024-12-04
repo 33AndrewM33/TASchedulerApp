@@ -16,7 +16,6 @@ class CourseModelTestCase(TestCase):
         )
 
     def test_create_course(self):
-        """Test that a course is created successfully."""
         course = Course.objects.get(course_id="CS101")
         self.assertEqual(course.name, "Introduction to Computer Science")
         self.assertEqual(course.semester, "Fall 2024")
@@ -25,7 +24,6 @@ class CourseModelTestCase(TestCase):
         self.assertEqual(course.modality, "Online")
 
     def test_update_course(self):
-        """Test updating a course's details."""
         self.course.name = "Intro to CS"
         self.course.description = "An updated description of the course."
         self.course.num_of_sections = 4
@@ -37,7 +35,6 @@ class CourseModelTestCase(TestCase):
         self.assertEqual(course.num_of_sections, 4)
 
     def test_delete_course(self):
-        """Test deleting a course."""
         self.course.delete()
         with self.assertRaises(Course.DoesNotExist):
             Course.objects.get(course_id="CS101")
@@ -71,7 +68,6 @@ class CourseModelTestCase(TestCase):
 
     def test_delete_course_with_sections(self):
         """Test cascading delete behavior when a course is deleted."""
-        """Test cascading delete behavior when a course is deleted."""
         # Create related sections
         section1 = Section.objects.create(
             section_id=1,
@@ -99,7 +95,6 @@ class CourseModelTestCase(TestCase):
         self.assertEqual(sections_count, 0, "Sections related to the deleted course should be removed.")
 
     def test_create_course_with_invalid_data(self):
-        """Test creating a course with invalid data."""
         with self.assertRaises(ValidationError):
             invalid_course = Course(
                 course_id="",  # Invalid: empty course ID
