@@ -7,9 +7,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Authentication Views
+    
     path('', views.custom_login, name='login'),  # Root path for login page
     path('logout/', views.custom_logout, name='logout'),  # Logout
     path('home/', views.home, name='home'),  # Home page
+    path('login/', views.custom_login, name='login'),
 
     # Course Management
     path('home/managecourse/', views.manage_course, name='manage_course'),

@@ -11,7 +11,14 @@
     <div class="container">
         <!-- Header -->
         <h1>Section Management</h1>
-
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    
         <!-- Back to Home Button -->
         <a href="{% url 'home' %}" class="btn btn-back">Back to Home</a>
 
