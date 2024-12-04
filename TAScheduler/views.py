@@ -230,7 +230,7 @@ class LoginManagement(View):
         return render(request, "login.html")
 
     def post(self, request):
-        username = request.POST.get("username")
+        username = request.POST.get("username").lower()  # Convert to lowercase
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
 
@@ -239,6 +239,7 @@ class LoginManagement(View):
             return redirect('/home/')
         else:
             return render(request, "login.html", {"error": "Invalid username or password"})
+
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class LogoutManagement(View):

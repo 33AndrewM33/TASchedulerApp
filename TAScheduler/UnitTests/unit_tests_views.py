@@ -5,6 +5,101 @@ from django.contrib.messages import get_messages
 from TAScheduler.models import Course, Lab, Lecture, Section, User
 
 
+
+
+class LoginManagementTest(TestCase):
+    def setUp(self):
+        # Create a test user
+        self.user = User.objects.create_user(
+            username="testuser", 
+            password="testpassword"
+        )
+        self.client = Client()
+        self.login_url = reverse("login")  # Adjust this to match your login URL name
+
+    def test_get_login_page(self):
+        # Test GET request to login page
+        response = self.client.get(self.login_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+
+    def test_post_valid_login(self):
+        # Test POST request with valid credentials
+        response = self.client.post(self.login_url, {
+            "username": "testuser",
+            "password": "testpassword"
+        })
+        self.assertRedirects(response, "/home/")  # Check redirection to the home page
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+    def test_post_invalid_login(self):
+        # Test POST request with invalid credentials
+        response = self.client.post(self.login_url, {
+            "username": "wronguser",
+            "password": "wrongpassword"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+        self.assertContains(response, "Invalid username or password")
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    def test_authenticated_user_redirected_from_login(self):
+        # Test GET request when user is already authenticated
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(self.login_url)
+        self.assertRedirects(response, "/home/")
+
+    def test_post_blank_username_password(self):
+        response = self.client.post(self.login_url, {
+            "username": "",
+            "password": ""
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+        self.assertContains(response, "Invalid username or password")
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    def test_post_blank_password(self):
+        response = self.client.post(self.login_url, {
+            "username": "testuser",
+            "password": ""
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+        self.assertContains(response, "Invalid username or password")
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        
+    def test_case_insensitive_username(self):
+        response = self.client.post(self.login_url, {
+            "username": "TestUser",
+            "password": "testpassword"
+        })
+        self.assertRedirects(response, "/home/")
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+        
+    def test_special_characters_in_username(self):
+        special_user = User.objects.create_user(
+            username="special!user#123",
+            email="special_user123@example.com",  # Use a unique email
+            password="specialpassword123"
+        )
+        response = self.client.post(self.login_url, {
+            "username": "special!user#123",
+            "password": "specialpassword123"
+        })
+        self.assertRedirects(response, "/home/")
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+
+    def test_logout_redirect(self):
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse("logout"))  # Replace with your logout URL name
+        self.assertRedirects(response, self.login_url)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+
+
+
 class TestAccountManagement(TestCase):
         def setUp(self):
             self.admin_user = User.objects.create(username="admin", email ="admin@example.com", is_admin=True)
@@ -304,7 +399,6 @@ class AccountCreationViewTest(TestCase):
         messages = [msg.message for msg in response.wsgi_request._messages]
         self.assertIn("All fields are required.", messages, "Expected error message for empty password.")
         self.assertFalse(User.objects.filter(username="emptyuser").exists(), "User should not be created with an empty password.")
-
 
 class CreateSectionViewTest(TestCase):
     def setUp(self):
