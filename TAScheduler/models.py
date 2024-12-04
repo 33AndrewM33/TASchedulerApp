@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserM
 # ----------------------------------------
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
-    email_address = models.EmailField(unique=True, max_length=90)
+    email = models.EmailField(unique=True, max_length=90)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     home_address = models.CharField(max_length=90, blank=True)

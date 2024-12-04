@@ -46,27 +46,19 @@ class AccountManagement(View):
 
     def post(self, request):
         action = request.POST.get("action")
+
         if action == "create":
+            # Handle user creation
             username = request.POST.get("username")
             email = request.POST.get("email")
             password = request.POST.get("password")
             role = request.POST.get("role")
 
-            # Check for missing fields
+            # Validate required fields
             if not all([username, email, password, role]):
                 messages.error(request, "All fields are required.")
                 return redirect("account_management")
 
-            # Check if the username or email already exists
-            if User.objects.filter(username=username).exists():
-                messages.error(request, "Username already exists.")
-                return redirect("account_management")
-
-            if User.objects.filter(email_address=email).exists():
-                messages.error(request, "Email address already exists.")
-                return redirect("account_management")
-
-            
             # Validate email format
             try:
                 validate_email(email)
@@ -79,15 +71,24 @@ class AccountManagement(View):
                 messages.error(request, "Invalid role selected.")
                 return redirect("account_management")
 
+            # Check for duplicate username or email
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Username already exists.")
+                return redirect("account_management")
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "Email address already exists.")
+                return redirect("account_management")
+
             # Assign role
             is_admin = role == "administrator"
             is_instructor = role == "instructor"
             is_ta = role == "ta"
 
             try:
+                # Create the user
                 user = User.objects.create(
                     username=username,
-                    email_address=email,
+                    email = email,  # Updated from email_address
                     is_admin=is_admin,
                     is_instructor=is_instructor,
                     is_ta=is_ta,
@@ -106,15 +107,18 @@ class AccountManagement(View):
                 messages.success(request, f"User '{username}' created successfully.")
             except Exception as e:
                 messages.error(request, f"Error creating user: {str(e)}")
+
         elif action == "delete":
+            # Handle user deletion
             user_id = request.POST.get("user_id")
 
-            # Validate user_id
-            if not user_id.isdigit():
+            # Validate user ID
+            if not user_id or not user_id.isdigit():
                 messages.error(request, "Invalid user ID.")
                 return redirect("account_management")
 
             try:
+                # Fetch and delete the user
                 user_to_delete = get_object_or_404(User, id=user_id)
                 user_to_delete.delete()
                 messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
@@ -123,14 +127,16 @@ class AccountManagement(View):
 
         return redirect("account_management")
 
+
 @method_decorator([login_required, user_passes_test(lambda u: u.is_admin)], name="dispatch")
 class AccountCreation(View):
     def get(self, request):
         return render(request, "create_account.html")
 
     def post(self, request):
+        # Fetch form data
         username = request.POST.get("username")
-        email_address = request.POST.get("email_address")
+        email = request.POST.get("email")  # Updated from email_address
         password = request.POST.get("password")
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
@@ -139,13 +145,13 @@ class AccountCreation(View):
         role = request.POST.get("role")
 
         # Validate required fields
-        if not all([username, email_address, password, first_name, last_name, role]):
+        if not all([username, email, password, first_name, last_name, role]):
             messages.error(request, "All fields are required.")
             return redirect("create-account")
 
         # Validate email format
         try:
-            validate_email(email_address)
+            validate_email(email)
         except ValidationError:
             messages.error(request, "Invalid email format.")
             return redirect("create-account")
@@ -154,7 +160,7 @@ class AccountCreation(View):
         if len(username) > 50:
             messages.error(request, "Username cannot exceed 50 characters.")
             return redirect("create-account")
-        if len(email_address) > 90:
+        if len(email) > 90:
             messages.error(request, "Email address cannot exceed 90 characters.")
             return redirect("create-account")
         if len(first_name) > 30:
@@ -174,44 +180,44 @@ class AccountCreation(View):
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
             return redirect("create-account")
-        if User.objects.filter(email_address=email_address).exists():
+        if User.objects.filter(email=email).exists():
             messages.error(request, "Email address already exists.")
             return redirect("create-account")
 
-        # Role assignment
-        is_admin = role == "administrator"
-        is_instructor = role == "instructor"
-        is_ta = role == "ta"
+        # Role assignment logic
+        role_mapping = {
+            "administrator": Administrator,
+            "instructor": Instructor,
+            "ta": TA,
+        }
+        role_model = role_mapping.get(role)
+        if not role_model:
+            messages.error(request, "Invalid role selected.")
+            return redirect("create-account")
 
         # Create the user
         try:
             user = User.objects.create(
                 username=username,
-                email_address=email_address,
+                email=email,
                 first_name=first_name,
                 last_name=last_name,
                 home_address=home_address,
                 phone_number=phone_number,
-                is_admin=is_admin,
-                is_instructor=is_instructor,
-                is_ta=is_ta,
             )
             user.set_password(password)
             user.save()
 
             # Create role-specific object
-            if is_admin:
-                Administrator.objects.create(user=user)
-            elif is_instructor:
-                Instructor.objects.create(user=user)
-            elif is_ta:
-                TA.objects.create(user=user)
+            role_model.objects.create(user=user)
 
             messages.success(request, "Account created successfully.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
+            return redirect("create-account")
 
         return redirect("home")
+
 
 # -----------------
 # Logging in and out controls
@@ -703,7 +709,7 @@ class EditUserView(View):
 
         # Update user fields
         user_to_edit.username = username
-        user_to_edit.email_address = email
+        user_to_edit.email = email
         if password:
             user_to_edit.set_password(password)
 

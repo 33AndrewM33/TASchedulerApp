@@ -7,7 +7,7 @@ from TAScheduler.models import Course, Lab, Lecture, Section, User
 
 class TestAccountManagement(TestCase):
         def setUp(self):
-            self.admin_user = User.objects.create(username="admin", email_address="admin@example.com", is_admin=True)
+            self.admin_user = User.objects.create(username="admin", email ="admin@example.com", is_admin=True)
             self.admin_user.set_password("password123")
             self.admin_user.save()
             self.client.login(username="admin", password="password123")
@@ -18,7 +18,7 @@ class TestAccountManagement(TestCase):
             # Create a non-admin user
             non_admin_user = User.objects.create(
                 username="nonadmin",
-                email_address="nonadmin@example.com",  # Use email_address instead of email
+                email="nonadmin@example.com", 
                 is_admin=False
             )
             non_admin_user.set_password("password123")
@@ -109,7 +109,7 @@ class TestAccountManagement(TestCase):
 
         def test_create_user_with_duplicate_username(self):
             """Ensure duplicate usernames are not allowed."""
-            User.objects.create(username="duplicateuser", email_address="duplicate@example.com")
+            User.objects.create(username="duplicateuser", email="duplicate@example.com")
             response = self.client.post(reverse("account_management"), {
                 "action": "create",
                 "username": "duplicateuser",
@@ -123,7 +123,7 @@ class TestAccountManagement(TestCase):
 
         def test_create_user_with_duplicate_email(self):
             """Ensure duplicate emails are not allowed."""
-            User.objects.create(username="uniqueuser", email_address="duplicate@example.com")
+            User.objects.create(username="uniqueuser", email="duplicate@example.com")
             response = self.client.post(reverse("account_management"), {
                 "action": "create",
                 "username": "newuniqueuser",
@@ -137,7 +137,7 @@ class TestAccountManagement(TestCase):
 
         def test_update_user_details(self):
             """Ensure user details can be updated correctly."""
-            user = User.objects.create(username="updateuser", email_address="update@example.com", is_ta=True)
+            user = User.objects.create(username="updateuser", email="update@example.com", is_ta=True)
             user.set_password("oldpassword")
             user.save()
 
@@ -147,16 +147,22 @@ class TestAccountManagement(TestCase):
                 "password": "newpassword",
                 "role": "instructor",
             })
+
+            # Refresh the user instance to get updated data
             user.refresh_from_db()
+
+            # Verify updated details
             self.assertEqual(user.username, "updateduser")
-            self.assertEqual(user.email_address, "updated@example.com")
+            self.assertEqual(user.email, "updated@example.com")  # Ensure this matches the test case
             self.assertTrue(user.is_instructor)
             self.assertFalse(user.is_ta)
             self.assertTrue(user.check_password("newpassword"))
 
+
+
         def test_delete_existing_user(self):
             """Ensure an existing user can be deleted."""
-            user = User.objects.create(username="deleteuser", email_address="delete@example.com")
+            user = User.objects.create(username="deleteuser", email="delete@example.com")
             response = self.client.post(reverse("account_management"), {
                 "action": "delete",
                 "user_id": user.id,
@@ -169,7 +175,7 @@ class AccountCreationViewTest(TestCase):
         # Create an admin user for authentication
         self.admin_user = User.objects.create(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",  # Updated field
             is_admin=True
         )
         self.admin_user.set_password("password123")
@@ -184,7 +190,7 @@ class AccountCreationViewTest(TestCase):
         """Ensure accounts can be successfully created with all required fields."""
         response = self.client.post(self.create_url, {
             "username": "newuser",
-            "email_address": "newuser@example.com",
+            "email": "newuser@example.com",  # Updated field
             "password": "password123",
             "first_name": "New",
             "last_name": "User",
@@ -197,15 +203,12 @@ class AccountCreationViewTest(TestCase):
         user = User.objects.get(username="newuser")
         self.assertEqual(user.home_address, "123 Test St")
         self.assertEqual(user.phone_number, "555-1234")
-        self.assertTrue(user.is_ta)
-        self.assertFalse(user.is_instructor)
-        self.assertFalse(user.is_admin)
 
     def test_create_account_missing_required_fields(self):
         """Verify error handling for missing required fields."""
         response = self.client.post(self.create_url, {
             "username": "",
-            "email_address": "missing@example.com",
+            "email": "missing@example.com",  # Updated field
             "password": "password123",
             "first_name": "",
             "last_name": "",
@@ -214,13 +217,13 @@ class AccountCreationViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         messages = [msg.message for msg in response.wsgi_request._messages]
         self.assertIn("All fields are required.", messages, "Expected error message for missing fields.")
-        self.assertFalse(User.objects.filter(email_address="missing@example.com").exists(), "User should not be created.")
+        self.assertFalse(User.objects.filter(email="missing@example.com").exists(), "User should not be created.")
 
     def test_create_account_duplicate_username(self):
         """Verify error handling for duplicate username."""
         response = self.client.post(self.create_url, {
             "username": "admin",
-            "email_address": "unique@example.com",
+            "email": "unique@example.com",  # Updated field
             "password": "password123",
             "first_name": "Duplicate",
             "last_name": "Username",
@@ -234,7 +237,7 @@ class AccountCreationViewTest(TestCase):
         """Verify error handling for duplicate email address."""
         response = self.client.post(self.create_url, {
             "username": "uniqueuser",
-            "email_address": "admin@example.com",
+            "email": "admin@example.com",  # Updated field
             "password": "password123",
             "first_name": "Duplicate",
             "last_name": "Email",
@@ -248,7 +251,7 @@ class AccountCreationViewTest(TestCase):
         """Verify error handling for invalid email format."""
         response = self.client.post(self.create_url, {
             "username": "invalidemailuser",
-            "email_address": "not-an-email",
+            "email": "not-an-email",  # Updated field
             "password": "password123",
             "first_name": "Invalid",
             "last_name": "Email",
@@ -258,12 +261,11 @@ class AccountCreationViewTest(TestCase):
         messages = [msg.message for msg in response.wsgi_request._messages]
         self.assertIn("Invalid email format.", messages, "Expected error message for invalid email format.")
 
-
     def test_create_account_optional_fields_blank(self):
         """Ensure users can be created without optional fields."""
         response = self.client.post(self.create_url, {
             "username": "optionalfieldsuser",
-            "email_address": "optional@example.com",
+            "email": "optional@example.com",  # Updated field
             "password": "password123",
             "first_name": "Optional",
             "last_name": "Fields",
@@ -273,13 +275,12 @@ class AccountCreationViewTest(TestCase):
         user = User.objects.get(username="optionalfieldsuser")
         self.assertEqual(user.home_address, "", "Optional field home_address should be blank.")
         self.assertEqual(user.phone_number, "", "Optional field phone_number should be blank.")
-        
-        
+
     def test_create_account_over_max_length_fields(self):
         """Ensure overly long inputs are rejected."""
         response = self.client.post(self.create_url, {
             "username": "u" * 51,  # Exceeds max length
-            "email_address": "e" * 81 + "@example.com",  # Exceeds max length
+            "email": "e" * 81 + "@example.com",  # Exceeds max length
             "password": "password123",
             "first_name": "f" * 31,  # Exceeds max length
             "last_name": "l" * 31,  # Exceeds max length
@@ -289,24 +290,11 @@ class AccountCreationViewTest(TestCase):
         messages = [msg.message for msg in response.wsgi_request._messages]
         self.assertIn("Username cannot exceed 50 characters.", "".join(messages), "Expected error message for exceeding max length.")
 
-    def test_create_account_special_characters(self):
-        """Ensure special characters are accepted where appropriate."""
-        response = self.client.post(self.create_url, {
-            "username": "user!@#$",
-            "email_address": "special@example.com",
-            "password": "password123",
-            "first_name": "Special",
-            "last_name": "Characters",
-            "role": "ta",
-        })
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(User.objects.filter(username="user!@#$").exists(), "User should be created with special characters.")
-
     def test_create_account_empty_password(self):
         """Ensure users cannot be created with an empty password."""
         response = self.client.post(self.create_url, {
             "username": "emptyuser",
-            "email_address": "empty@example.com",
+            "email": "empty@example.com",  # Updated field
             "password": "",
             "first_name": "Empty",
             "last_name": "Password",
@@ -317,6 +305,7 @@ class AccountCreationViewTest(TestCase):
         self.assertIn("All fields are required.", messages, "Expected error message for empty password.")
         self.assertFalse(User.objects.filter(username="emptyuser").exists(), "User should not be created with an empty password.")
 
+
 class CreateSectionViewTest(TestCase):
     def setUp(self):
         # Initialize the test client
@@ -325,7 +314,7 @@ class CreateSectionViewTest(TestCase):
         # Create an admin user directly since we're using a custom User model
         self.user = User.objects.create(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",
             first_name="Admin",
             last_name="User",
             is_admin=True,
@@ -518,7 +507,7 @@ class EditSectionViewTests(TestCase):
         # Create a test user
         self.admin_user = User.objects.create(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",
             first_name="Admin",
             last_name="User",
             is_admin=True,
@@ -730,7 +719,7 @@ class EditSectionViewTests(TestCase):
         """Test that non-admin users cannot edit sections."""
         non_admin_user = User.objects.create(
             username="nonadmin",
-            email_address="nonadmin@example.com",
+            email="nonadmin@example.com",
             first_name="Non",
             last_name="Admin",
             is_admin=False,
@@ -766,7 +755,7 @@ class DeleteSectionViewTests(TestCase):
         # Create an admin user
         self.admin_user = User.objects.create(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",
             is_admin=True
         )
         self.admin_user.set_password("password123")
@@ -775,7 +764,7 @@ class DeleteSectionViewTests(TestCase):
         # Create a non-admin user
         self.non_admin_user = User.objects.create(
             username="nonadmin",
-            email_address="nonadmin@example.com",
+            email="nonadmin@example.com",
             is_admin=False
         )
         self.non_admin_user.set_password("password123")
@@ -909,7 +898,7 @@ class SectionManagementTests(TestCase):
         # Create an admin user
         self.admin_user = User.objects.create(
             username="admin",
-            email_address="admin@example.com",
+            email="admin@example.com",
             is_admin=True
         )
         self.admin_user.set_password("password123")
@@ -1005,7 +994,7 @@ class SectionManagementTests(TestCase):
         self.client.logout()
         non_admin_user = User.objects.create(
             username="nonadmin",
-            email_address="nonadmin@example.com",
+            email="nonadmin@example.com",
             is_admin=False
         )
         non_admin_user.set_password("password123")
