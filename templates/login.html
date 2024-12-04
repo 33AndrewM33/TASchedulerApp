@@ -12,7 +12,7 @@
         <div class="aom">
             <div class="image">
                 <!-- Image for the login page -->
-                <h2>TA Login</h2>
+                <h2>User login (use username only forgot password to reset your password) </h2>
             </div>
             <form id="loginForm" action="/" method="post">
                 {% csrf_token %}
@@ -27,7 +27,6 @@
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
 
-                <!-- Forgot Password link with enhanced styling -->
                 <a href="/forgot_password/" class="forgot-password-link">Forgot Password?</a>
 
                 <!-- Login button -->
