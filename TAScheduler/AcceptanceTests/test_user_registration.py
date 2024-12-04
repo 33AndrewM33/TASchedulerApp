@@ -6,7 +6,7 @@ class UserModelTests(TestCase):
     def test_user_registration(self):
         user = User.objects.create(
             username="testuser",
-            email_address="testuser@example.com",
+            email="testuser@example.com",
             password="password123"
         )
         self.assertEqual(user.username, "testuser")
