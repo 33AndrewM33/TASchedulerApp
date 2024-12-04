@@ -8,7 +8,7 @@
 /* Body and Background */
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #ffffff, #0056b3, #350909);
+    background: linear-gradient(135deg, #4e5b6e, #2a3b48);
     color: #fff;
     display: flex;
     justify-content: center;
@@ -20,9 +20,12 @@ body {
 
 /* Main Container */
 .container {
-    max-width: 450px; /* Makes it smaller and centered */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     width: 90%;
-    background-color: rgba(255, 255, 255, 0.8); /* Slight transparency for better contrast */
+    background-color: rgba(255, 255, 255, 0.1); /* Slight transparency */
     border-radius: 10px;
     padding: 30px;
     box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
@@ -30,178 +33,168 @@ body {
 }
 
 /* Header */
-h2 {
+h1 {
+    color: #f1f1f1;
+    font-family: 'Arial', sans-serif;
+    font-size: 32px;
     text-align: center;
     margin-bottom: 30px;
-    font-size: 32px;
+}
+
+/* User Table Styling */
+.user-table th, .user-table td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: center;
     color: #333;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.user-table th {
+    background-color: #f1f1f1;
+}
+
+.user-table td {
+    font-size: 14px;
 }
 
 /* Form Section */
 form {
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.9); /* Transparent background */
-    border-radius: 8px;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    margin-top: 20px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.2); /* Transparent background */
+    border-radius: 12px;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-form .form-group {
-    margin-bottom: 15px;
+    flex-wrap: wrap; /* Responsive layout for smaller screens */
+    gap: 20px;
 }
 
 form label {
+    margin-bottom: 5px;
     font-size: 16px;
     color: #333;
-    display: block;
-    margin-bottom: 5px;
 }
 
-form input[type="text"],
-form input[type="password"] {
+form input, form select, form button {
+    flex: 1 1 calc(33.33% - 20px); /* Responsive fields */
     padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 8px;
+    font-size: 14px;
     color: #333;
     background-color: #f9f9f9;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-form input[type="text"]:focus,
-form input[type="password"]:focus {
+form input:focus, form select:focus, form button:focus {
     outline: none;
     border-color: #007bff;
+    background-color: #eaf4ff; /* Light blue background on focus */
     box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
 }
 
 /* Buttons */
-.nav-button,
-.login-btn {
+button, .nav-button, .button, .btn {
     padding: 12px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #007bff;
+    font-size: 14px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    text-align: center;
     transition: all 0.3s ease;
 }
 
-.nav-button:hover,
-.login-btn:hover {
-    background-color: #0056b3;
+button:hover, .nav-button:hover, .button:hover, .btn:hover {
     transform: scale(1.05);
 }
 
-/* Link Styling */
-a.nav-button {
-    color: #007bff;
-    text-decoration: none;
+.btn-create {
     display: inline-block;
-    margin-top: 10px;
-}
-
-a.nav-button:hover {
-    text-decoration: underline;
-}
-
-/* Error Message */
-.error {
-    color: #dc3545;
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-/* Image Styling for Login */
-.login-image {
-    width: 100%;
-    height: auto;
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-size: 18px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
     border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.btn-create:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Back to Home Button */
+.btn-back {
+    display: inline-block;
     margin-bottom: 20px;
-    max-width: 300px; /* Optional: to keep the image size small */
-    margin-left: auto;
-    margin-right: auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #6c757d;
+    text-decoration: none;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+.btn-back:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+/* Delete Button */
+.delete-btn {
+    background-color: #dc3545;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Edit Button */
+.edit-btn {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.edit-btn:hover {
+    background-color: #e0a800;
+}
+
+/* Submit Button */
+.submit-btn {
+    background-color: #28a745;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.submit-btn:hover {
+    background-color: #218838;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
+    form {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn-create {
         width: 100%;
     }
 
-    .login-image {
-        max-width: 100%; /* Image takes full width on smaller devices */
+    .btn-back {
+        margin-bottom: 10px;
     }
-
-    .nav-button,
-    .login-btn {
-        width: 100%; /* Make buttons full width on smaller screens */
-    }
-}
-/* Enhanced Forgot Password Button Style */
-.forgot-password-link {
-    display: block;
-    margin-top: 15px;
-    font-size: 16px;
-    color: #007bff; /* Blue color */
-    text-align: center;
-    text-decoration: none;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.forgot-password-link:hover {
-    color: #0056b3; /* Darker blue on hover */
-    text-decoration: underline;
-}
-
-/* Login Button Styling (optional) */
-.nav-button {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 12px 20px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 5px;
-    font-size: 16px;
-    text-align: center;
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.nav-button:hover {
-    background-color: #0056b3;
-}
-
-/* Optional: Style the form container and image */
-.container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 40px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.image img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-}
-
-h2 {
-    text-align: center;
-    font-family: 'Funnel Display', sans-serif;
-    font-size: 24px;
-    margin-top: 20px;
-    color: #333;
 }
