@@ -44,7 +44,6 @@ def manage_section(request):
 
     return render(request, 'manage_section.html', {"user": request.user, "sections": sections})
 
-
 @login_required
 def create_section(request):
     
@@ -121,7 +120,6 @@ def create_section(request):
     courses = Course.objects.all()
     return render(request, 'create_section.html', {"user": request.user, "courses": courses})
 
-
 @login_required
 def edit_section(request, section_id):
     # Restrict access to only instructors and admins
@@ -175,7 +173,6 @@ def edit_section(request, section_id):
         "tas": TA.objects.all(),
         "instructors": Instructor.objects.all()
     })
-
 
 @login_required
 def delete_section(request, section_id):
