@@ -175,11 +175,15 @@ def account_management(request):
             email = request.POST.get("email")
             password = request.POST.get("password")
             role = request.POST.get("role")
+            first_name = request.POST.get("first_name")  # Added first name
+            last_name = request.POST.get("last_name")    # Added last name
             try:
                 new_user = User.objects.create(
                     username=username,
                     email=email,
-                    password=make_password(password)
+                    password=make_password(password),
+                    first_name=first_name,  # Assigning first name
+                    last_name=last_name,    # Assigning last name
                 )
                 if role == "ta":
                     new_user.is_ta = True
