@@ -13,6 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=30)
     home_address = models.CharField(max_length=90, blank=True)  # Private information
     phone_number = models.CharField(max_length=15, blank=True)  # Private information
+    is_temporary_password = models.BooleanField(default=False)  # New field to track temporary passwords
 
     # Roles
     is_admin = models.BooleanField(default=False)
@@ -119,14 +120,14 @@ class Notification(models.Model):
 
     @staticmethod
     def notify_admin_on_password_change(user):
-        """Send a notification to all administrators when a user changes their password."""
+        """Notify all admins when a user changes their password."""
         admins = User.objects.filter(is_admin=True)
         for admin in admins:
             Notification.objects.create(
                 sender=user,
                 recipient=admin,
                 subject="Password Changed",
-                message=f"The user {user.first_name} {user.last_name} ({user.username}) has changed their password."
+                message=f"The user {user.username} has changed their password.",
             )
 # ----------------------------------------
 # Administrator Model

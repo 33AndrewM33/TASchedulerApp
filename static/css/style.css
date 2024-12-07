@@ -409,4 +409,23 @@ form input, form select {
     background: linear-gradient(90deg, #ff4e50, #ff1c1c);
  
 }
+/* Success Message */
+.success-message {
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Error Message */
+.error-message {
+    background-color: #f44336;
+    color: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
 

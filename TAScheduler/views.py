@@ -3,7 +3,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.conf import settings  # Added
+
+import random
+import string
+
 from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User, Notification
+
 
 # ----------------------------------------
 # Section Management Views
@@ -309,13 +317,35 @@ def home_ta(request):
 
 def forgot_password(request):
     error = None
+    success_message = None  # Added to store the success message
     security_questions = {
         "question_1": "university of wisconsin milwaukee",
         "question_2": "rock",
         "question_3": "django",
     }
+
     if request.method == "POST":
-        if "username" in request.POST and "answer_1" in request.POST:
+        if "temp_password" in request.POST:  # If "Send Temporary Password" is clicked
+            username = request.POST.get("username", "").strip()
+            email = request.POST.get("email", "").strip()
+            try:
+                user = User.objects.get(username=username, email=email)
+                temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+                user.set_password(temp_password)
+                user.is_temporary_password = True
+                user.save()
+
+                send_mail(
+                    subject="Your Temporary Password",
+                    message=f"Your temporary password is: {temp_password}\nPlease change your password after logging in.",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                )
+                success_message = "Temporary password sent to your email!"
+            except User.DoesNotExist:
+                error = "User not found or email does not match."
+
+        elif "username" in request.POST and "answer_1" in request.POST:  # If security questions are answered
             username = request.POST.get("username", "").strip()
             answer_1 = request.POST.get("answer_1", "").strip().lower()
             answer_2 = request.POST.get("answer_2", "").strip().lower()
@@ -329,25 +359,11 @@ def forgot_password(request):
                 return render(request, "reset_password.html")
             else:
                 error = "One or more answers were incorrect. Please try again."
-        elif "new_password" in request.POST and "confirm_password" in request.POST:
-            username = request.session.get('valid_user', None)
-            if username:
-                new_password = request.POST.get("new_password", "")
-                confirm_password = request.POST.get("confirm_password", "")
-                if new_password == confirm_password:
-                    try:
-                        user = User.objects.get(username=username)
-                        user.password = make_password(new_password)
-                        user.save()
 
-                        # Notify admins about the password change
-                        Notification.notify_admin_on_password_change(user)
-
-                        messages.success(request, "Password reset! Log in with your new password.")
-                        return redirect('/')
-                    except User.DoesNotExist:
-                        error = "User not found. Please start again."
-    return render(request, "forgot_password.html", {"error": error})
+    return render(request, "forgot_password.html", {
+        "error": error,
+        "success_message": success_message,
+    })
 
 @login_required
 def edit_user(request, user_id):
@@ -386,7 +402,30 @@ def edit_user(request, user_id):
     }
     return render(request, "edit_user.html", context)
 
+def send_temp_password(request):
+    if request.method == "POST":
+        username = request.POST.get("temp-username")
+        email = request.POST.get("temp-email")
 
+        user = User.objects.filter(username=username, email=email).first()
+        if user:
+            # Generate a temporary password
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            user.set_password(temp_password)
+            user.save()
+
+            # Send email
+            send_mail(
+                "Your Temporary Password",
+                f"Your temporary password is: {temp_password}\nPlease change your password after logging in.",
+                "no-reply@example.com",
+                [email],
+            )
+            return JsonResponse({"message": "Temporary password sent to your email!"}, status=200)
+        else:
+            return JsonResponse({"message": "User not found or email does not match."}, status=404)
+
+    return JsonResponse({"message": "Invalid request."}, status=400)
 @login_required
 def assign_instructor_to_course_account_dashboard(request, user_id):
     instructor = get_object_or_404(User, id=user_id, is_instructor=True)

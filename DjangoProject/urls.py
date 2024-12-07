@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Forgot Password
     path('forgot_password/', views.forgot_password, name='forgot_password'),
+
+path('send_temp_password/', views.send_temp_password, name='send_temp_password'),
+
 ]
