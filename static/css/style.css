@@ -136,6 +136,7 @@ form input, form select {
 }
 
 .assign-btn:hover {
+
     transform: scale(1.1);
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
 }
@@ -293,5 +294,119 @@ form input, form select {
 
 .btn-assign:hover {
     background-color: #e0a800;
+=======
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Delete Button */
+.delete-btn {
+    background: linear-gradient(90deg, #d7263d, #a01728);
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Edit Button */
+.edit-btn {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+}
+
+.edit-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Create User Button */
+.create-user-btn {
+    background: linear-gradient(90deg, #2575fc, #1b3fb6);
+    padding: 12px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.create-user-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Button */
+.notification-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #581cda, #2575fc);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.notification-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Panel */
+.notification-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fade-in 0.5s ease;
+}
+
+.notification-panel h2 {
+    font-size: 18px;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.notification-panel ul li {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Buttons inside Notification */
+.close-button, .clear-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #fff;
+    border-radius: 5px;
+    margin: 5px;
+}
+.clear-button {
+    background: linear-gradient(90deg, #17b978, #0c9463);
+}
+.close-button {
+    background: linear-gradient(90deg, #ff4e50, #ff1c1c);
+ 
 }
 

@@ -181,9 +181,13 @@ def account_management(request):
                 new_user = User.objects.create(
                     username=username,
                     email=email,
+
                     password=make_password(password),
                     first_name=first_name,  # Assigning first name
                     last_name=last_name,    # Assigning last name
+
+                    password=make_password(password)
+
                 )
                 if role == "ta":
                     new_user.is_ta = True
@@ -266,7 +270,7 @@ def home(request):
         # If no role is assigned, redirect to login with an error
         messages.error(request, "Invalid user role.")
         return redirect('login')
-# TAScheduler/views.py
+
 
 def clear_notifications(request):
     if request.method == "POST":
@@ -280,6 +284,22 @@ def home_instructor(request):
         "user": request.user,
         "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
     })
+
+
+
+def clear_notifications(request):
+    if request.method == "POST":
+        # Clear notifications for the current admin
+        Notification.objects.filter(recipient=request.user).delete()
+        messages.success(request, "All notifications cleared successfully.")
+    return redirect('home')
+@login_required
+def home_instructor(request):
+    return render(request, 'home_instructor.html', {
+        "user": request.user,
+        "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
+    })
+
 
 @login_required
 def home_ta(request):
