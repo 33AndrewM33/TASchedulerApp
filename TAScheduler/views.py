@@ -175,11 +175,19 @@ def account_management(request):
             email = request.POST.get("email")
             password = request.POST.get("password")
             role = request.POST.get("role")
+            first_name = request.POST.get("first_name")  # Added first name
+            last_name = request.POST.get("last_name")    # Added last name
             try:
                 new_user = User.objects.create(
                     username=username,
                     email=email,
+
+                    password=make_password(password),
+                    first_name=first_name,  # Assigning first name
+                    last_name=last_name,    # Assigning last name
+
                     password=make_password(password)
+
                 )
                 if role == "ta":
                     new_user.is_ta = True
@@ -211,7 +219,11 @@ def account_management(request):
             except Exception as e:
                 messages.error(request, f"Error deleting user: {str(e)}")
     users = User.objects.all()
-    return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
+    courses = Course.objects.all()  # Fetch all courses for assignment dropdown
+    return render(request, "account_management.html", {
+        "users": users,
+        "courses": courses,
+    })
 # ----------------------------------------
 # Authentication Views
 # ----------------------------------------
@@ -258,7 +270,7 @@ def home(request):
         # If no role is assigned, redirect to login with an error
         messages.error(request, "Invalid user role.")
         return redirect('login')
-# TAScheduler/views.py
+
 
 def clear_notifications(request):
     if request.method == "POST":
@@ -272,6 +284,22 @@ def home_instructor(request):
         "user": request.user,
         "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
     })
+
+
+
+def clear_notifications(request):
+    if request.method == "POST":
+        # Clear notifications for the current admin
+        Notification.objects.filter(recipient=request.user).delete()
+        messages.success(request, "All notifications cleared successfully.")
+    return redirect('home')
+@login_required
+def home_instructor(request):
+    return render(request, 'home_instructor.html', {
+        "user": request.user,
+        "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
+    })
+
 
 @login_required
 def home_ta(request):
@@ -358,3 +386,49 @@ def edit_user(request, user_id):
         "roles": ["ta", "instructor", "administrator"],
     }
     return render(request, "edit_user.html", context)
+
+
+@login_required
+def assign_instructor_to_course_account_dashboard(request, user_id):
+    instructor = get_object_or_404(User, id=user_id, is_instructor=True)
+
+    if request.method == "POST":
+        course_id = request.POST.get("course_id")
+        if not course_id:
+            messages.error(request, "Please select a course.")
+            return redirect("account_management")
+
+        course = get_object_or_404(Course, id=course_id)
+
+        # Assign the instructor to the course
+        course.instructors.add(instructor.instructor_profile)
+        course.save()
+
+        messages.success(request, f"Instructor {instructor.first_name} {instructor.last_name} assigned to course {course.name}.")
+        return redirect("account_management")
+    return redirect("account_management")
+
+@login_required
+def assign_instructors_to_course(request, course_id):
+    # Get the course by ID
+    course = get_object_or_404(Course, course_id=course_id)
+
+    # Fetch all instructors from the database
+    instructors = Instructor.objects.all()
+
+    if request.method == "POST":
+        # Get selected instructor IDs from the form
+        selected_instructors = request.POST.getlist("instructors")
+
+        # Assign instructors to the course
+        course.instructors.set(Instructor.objects.filter(id__in=selected_instructors))
+        course.save()
+
+        messages.success(request, f"Instructors updated for course '{course.name}'.")
+        return redirect("manage_course")
+
+    # Render the template with course and instructor data
+    return render(request, "assign_instructors.html", {
+        "course": course,
+        "instructors": instructors,
+    })

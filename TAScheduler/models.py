@@ -174,7 +174,9 @@ class Course(models.Model):
     description = models.TextField()
     num_of_sections = models.IntegerField()
     modality = models.CharField(max_length=50, choices=[("Online", "Online"), ("In-person", "In-person")])
-    instructor = models.ForeignKey(Instructor, on_delete=models.SET_NULL, null=True, related_name="courses")
+
+    instructors = models.ManyToManyField(Instructor, related_name="courses")
+
 
     def __str__(self):
         return f"{self.course_id}: {self.name}"

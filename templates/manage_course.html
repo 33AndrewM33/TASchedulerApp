@@ -42,7 +42,9 @@
                     <th>Semester</th>
                     <th>Modality</th>
                     <th>Sections</th>
+                    <th>Instructors</th> <!-- New Column -->
                     <th>Actions</th>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -54,8 +56,20 @@
                     <td>{{ course.modality }}</td>
                     <td>{{ course.num_of_sections }}</td>
                     <td>
+                        {% if course.instructors.exists %}
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for instructor in course.instructors.all %}
+                                    <li>{{ instructor.user.first_name }} {{ instructor.user.last_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            No instructors assigned
+                        {% endif %}
+                    </td>                    
+                    <td>
                         <a href="{% url 'edit_course' course.course_id %}" class="btn btn-edit">Edit</a>
                         <a href="{% url 'delete_course' course.course_id %}" onclick="return confirm('Are you sure?')" class="btn btn-delete">Delete</a>
+                        <a href="{% url 'assign_instructors_to_course' course.course_id %}" class="btn btn-edit">Assign</a>
                     </td>
                 </tr>
                 {% empty %}

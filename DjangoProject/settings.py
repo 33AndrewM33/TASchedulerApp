@@ -89,6 +89,8 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+AUTH_USER_MODEL = "TAScheduler.User"
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -120,7 +122,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
+LOGIN_URL = '/login/'  # This is the URL where unauthenticated users will be redirected.
+STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Default primary key field type

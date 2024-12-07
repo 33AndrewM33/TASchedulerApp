@@ -10,7 +10,12 @@
 <body>
     <div class="container">
         <h1>Account Management</h1>
-
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        
         <div>
             <!-- User Table -->
             <h2>Existing Users</h2>
@@ -41,9 +46,16 @@
                                 </form>
 
                                 {% if user.is_ta or user.is_instructor %}
-                                    <!-- Assign Button for TA and Instructor only -->
-                                    <form method="GET" action="{% url 'assign_user_role' user.id %}" style="display: inline;">
-                                        <button type="submit" class="submit-btn">Assign</button>
+                                    <!-- Assign to Course -->
+                                    <form method="POST" action="{% url 'assign_instructor_to_course' user.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <select name="course_id" required>
+                                            <option value="">Select Course</option>
+                                            {% for course in courses %}
+                                                <option value="{{ course.id }}">{{ course.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="assign-btn">Assign</button>
                                     </form>
                                 {% endif %}
                             </td>
@@ -63,6 +75,12 @@
             <h2>Create New User</h2>
             <form method="POST" action="">
                 {% csrf_token %}
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" required><br>
+
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" required><br>
+
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required><br>
 
