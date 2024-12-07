@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Notification Panel -->
+    <div class="notification-container" id="notificationContainer">
+        <button class="notification-button" id="notificationButton">NOTIFICATIONS</button>
+        <div class="notification-panel" id="notificationPanel">
+            <h2>Notifications</h2>
+            <ul>
+                <li>No notifications available (Placeholder).</li>
+            </ul>
+            <button class="close-button" id="closeButton">CLOSE</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>{{ message }}</h1>
+        </header>
+        <footer>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="logout-button" value="Logout">
+            </form>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const notificationButton = document.getElementById("notificationButton");
+        const notificationPanel = document.getElementById("notificationPanel");
+        const closeButton = document.getElementById("closeButton");
+
+        // Toggle the notification panel
+        notificationButton.addEventListener("click", () => {
+            notificationPanel.style.display = "block";
+        });
+
+        // Close the notification panel
+        closeButton.addEventListener("click", () => {
+            notificationPanel.style.display = "none";
+        });
+    </script>
+</body>
+</html>

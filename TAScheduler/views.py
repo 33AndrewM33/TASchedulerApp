@@ -186,7 +186,6 @@ def account_management(request):
                     first_name=first_name,  # Assigning first name
                     last_name=last_name,    # Assigning last name
 
-                    password=make_password(password)
 
                 )
                 if role == "ta":
