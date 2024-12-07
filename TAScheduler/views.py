@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User
+from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User, Notification
 from django.core.exceptions import PermissionDenied
 
 # ----------------------------------------
@@ -79,6 +79,24 @@ def create_section(request):
         # Check if the provided course_id corresponds to an existing course
         try:
             course = Course.objects.get(course_id=course_id)
+            if Section.objects.filter(section_id=section_id, course=course).exists():
+                messages.error(request, "Section with this ID already exists.")
+            else:
+                section = Section.objects.create(
+                    section_id=section_id,
+                    course=course,
+                    location=location,
+                    meeting_time=meeting_time,
+                )
+                if section_type.lower() == "lab":
+                    Lab.objects.create(section=section)
+                elif section_type.lower() == "lecture":
+                    Lecture.objects.create(section=section)
+
+                # Notify admins about the new section
+                Notification.notify_admin_on_section_creation(section, request.user)
+
+                messages.success(request, f"{section_type} section created successfully.")
         except Course.DoesNotExist:
             messages.error(request, "Invalid course ID.")
             return render(request, 'create_section.html', {"user": request.user, "courses": Course.objects.all()})
@@ -119,7 +137,6 @@ def create_section(request):
     # Render the form with a list of all courses for selection
     courses = Course.objects.all()
     return render(request, 'create_section.html', {"user": request.user, "courses": courses})
-
 @login_required
 def edit_section(request, section_id):
     # Restrict access to only instructors and admins
@@ -226,7 +243,7 @@ def create_course(request):
             if Course.objects.filter(course_id=course_id).exists():
                 messages.error(request, "A course with this ID already exists.")
                 return redirect('create_course')
-            Course.objects.create(
+            course = Course.objects.create(
                 course_id=course_id,
                 name=name,
                 semester=semester,
@@ -234,6 +251,9 @@ def create_course(request):
                 modality=modality,
                 num_of_sections=num_of_sections,
             )
+            # Notify admins about the new course
+            Notification.notify_admin_on_course_creation(course, request.user)
+
             messages.success(request, f"Course '{name}' created successfully.")
             return redirect('manage_course')
         except Exception as e:
@@ -281,7 +301,7 @@ def account_management(request):
             try:
                 new_user = User.objects.create(
                     username=username,
-                    email=email,  # Ensure email is used
+                    email=email,
                     password=make_password(password)
                 )
                 if role == "ta":
@@ -294,6 +314,10 @@ def account_management(request):
                     new_user.is_admin = True
                     Administrator.objects.create(user=new_user)
                 new_user.save()
+
+                # Notify admins about the new account
+                Notification.notify_admin_on_account_creation(new_user, request.user)
+
                 messages.success(request, f"User '{username}' created successfully.")
             except Exception as e:
                 messages.error(request, f"Error creating user: {str(e)}")
@@ -301,44 +325,14 @@ def account_management(request):
             user_id = request.POST.get("user_id")
             try:
                 user_to_delete = get_object_or_404(User, id=user_id)
+
+                # Notify admins about the account deletion
+                Notification.notify_admin_on_account_deletion(user_to_delete, request.user)
+
                 user_to_delete.delete()
                 messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
             except Exception as e:
                 messages.error(request, f"Error deleting user: {str(e)}")
-        elif action == "edit":
-            user_id = request.POST.get("user_id")
-            editing_user = get_object_or_404(User, id=user_id)
-        elif action == "update":
-            user_id = request.POST.get("editing_user_id")
-            username = request.POST.get("username")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-            role = request.POST.get("role")
-            try:
-                user_to_update = get_object_or_404(User, id=user_id)
-                user_to_update.username = username
-                user_to_update.email = email  # Ensure email is updated
-                if password:
-                    user_to_update.password = make_password(password)
-                user_to_update.is_ta = False
-                user_to_update.is_instructor = False
-                user_to_update.is_admin = False
-                if role == "ta":
-                    user_to_update.is_ta = True
-                    if not hasattr(user_to_update, "ta_profile"):
-                        TA.objects.create(user=user_to_update)
-                elif role == "instructor":
-                    user_to_update.is_instructor = True
-                    if not hasattr(user_to_update, "instructor_profile"):
-                        Instructor.objects.create(user=user_to_update)
-                elif role == "administrator":
-                    user_to_update.is_admin = True
-                    if not hasattr(user_to_update, "administrator_profile"):
-                        Administrator.objects.create(user=user_to_update)
-                user_to_update.save()
-                messages.success(request, f"User '{username}' updated successfully.")
-            except Exception as e:
-                messages.error(request, f"Error updating user: {str(e)}")
     users = User.objects.all()
     return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
 # ----------------------------------------
@@ -370,24 +364,43 @@ def custom_logout(request):
 
 @login_required
 def home(request):
-    storage = messages.get_messages(request)
-    storage.used = True
-
-    # Check user role and display appropriate message
-    if request.user.is_ta:
-        message = f"Welcome TA {request.user.username}! This page will display the lab assignments that will be developed in Sprint 2."
-        show_navigation = False  # Hide navigation for TA
+    if request.user.is_admin:
+        # Admin-specific home page
+        notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+        return render(request, 'home_admin.html', {
+            "user": request.user,
+            "notifications": notifications
+        })
     elif request.user.is_instructor:
-        message = f"Welcome Instructor {request.user.username}! This page will display the courses assigned to you by the admin and the sections you're in."
-        show_navigation = False  # Hide navigation for Instructor
+        # Redirect to instructor home page
+        return redirect('home_instructor')
+    elif request.user.is_ta:
+        # Redirect to TA home page
+        return redirect('home_ta')
     else:
-        message = "Welcome Admin! You have full access to manage the system."
-        show_navigation = True  # Show navigation for Admin
+        # If no role is assigned, redirect to login with an error
+        messages.error(request, "Invalid user role.")
+        return redirect('login')
+# TAScheduler/views.py
 
-    return render(request, 'home.html', {
+def clear_notifications(request):
+    if request.method == "POST":
+        # Clear notifications for the current admin
+        Notification.objects.filter(recipient=request.user).delete()
+        messages.success(request, "All notifications cleared successfully.")
+    return redirect('home')
+@login_required
+def home_instructor(request):
+    return render(request, 'home_instructor.html', {
         "user": request.user,
-        "message": message,
-        "show_navigation": show_navigation
+        "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
+    })
+
+@login_required
+def home_ta(request):
+    return render(request, 'home_ta.html', {
+        "user": request.user,
+        "message": "Welcome to the TA Dashboard! Placeholder content here.",
     })
 
 def forgot_password(request):
@@ -404,9 +417,9 @@ def forgot_password(request):
             answer_2 = request.POST.get("answer_2", "").strip().lower()
             answer_3 = request.POST.get("answer_3", "").strip().lower()
             if (
-                answer_1 == security_questions["question_1"] and
-                answer_2 == security_questions["question_2"] and
-                answer_3 == security_questions["question_3"]
+                    answer_1 == security_questions["question_1"] and
+                    answer_2 == security_questions["question_2"] and
+                    answer_3 == security_questions["question_3"]
             ):
                 request.session['valid_user'] = username
                 return render(request, "reset_password.html")
@@ -422,15 +435,14 @@ def forgot_password(request):
                         user = User.objects.get(username=username)
                         user.password = make_password(new_password)
                         user.save()
+
+                        # Notify admins about the password change
+                        Notification.notify_admin_on_password_change(user)
+
                         messages.success(request, "Password reset! Log in with your new password.")
                         return redirect('/')
                     except User.DoesNotExist:
                         error = "User not found. Please start again."
-                else:
-                    error = "Passwords do not match. Try again."
-                    return render(request, "reset_password.html", {"error": error})
-            else:
-                error = "Session expired. Start again."
     return render(request, "forgot_password.html", {"error": error})
 
 @login_required

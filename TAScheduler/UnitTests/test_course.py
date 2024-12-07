@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from TAScheduler.models import Course, Section
 
-
 class CourseModelTestCase(TestCase):
     def setUp(self):
         # Set up initial data for the tests
