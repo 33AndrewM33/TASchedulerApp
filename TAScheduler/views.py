@@ -211,7 +211,11 @@ def account_management(request):
             except Exception as e:
                 messages.error(request, f"Error deleting user: {str(e)}")
     users = User.objects.all()
-    return render(request, 'account_management.html', {"users": users, "editing_user": editing_user})
+    courses = Course.objects.all()  # Fetch all courses for assignment dropdown
+    return render(request, "account_management.html", {
+        "users": users,
+        "courses": courses,
+    })
 # ----------------------------------------
 # Authentication Views
 # ----------------------------------------
@@ -360,9 +364,25 @@ def edit_user(request, user_id):
     return render(request, "edit_user.html", context)
 
 
-from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib import messages
-from TAScheduler.models import Course, Instructor
+@login_required
+def assign_instructor_to_course_account_dashboard(request, user_id):
+    instructor = get_object_or_404(User, id=user_id, is_instructor=True)
+
+    if request.method == "POST":
+        course_id = request.POST.get("course_id")
+        if not course_id:
+            messages.error(request, "Please select a course.")
+            return redirect("account_management")
+
+        course = get_object_or_404(Course, id=course_id)
+
+        # Assign the instructor to the course
+        course.instructors.add(instructor.instructor_profile)
+        course.save()
+
+        messages.success(request, f"Instructor {instructor.first_name} {instructor.last_name} assigned to course {course.name}.")
+        return redirect("account_management")
+    return redirect("account_management")
 
 @login_required
 def assign_instructors_to_course(request, course_id):

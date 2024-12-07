@@ -39,4 +39,6 @@ urlpatterns = [
     
     # Assigning an instructor 
     path('home/managecourse/assign/<str:course_id>/', views.assign_instructors_to_course, name='assign_instructors_to_course'),
+    path('account/assign/<int:user_id>/', views.assign_instructor_to_course_account_dashboard, name='assign_instructor_to_course'),
+
 ]
