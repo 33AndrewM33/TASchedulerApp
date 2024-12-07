@@ -8,6 +8,8 @@ urlpatterns = [
 
     # Authentication Views
     path('', views.custom_login, name='login'),  # Root path for login page
+    path('notifications/clear/', views.clear_notifications, name='clear_notifications'),
+
     path('logout/', views.custom_logout, name='logout'),  # Logout
     path('home/', views.home, name='home'),  # Home page
 
