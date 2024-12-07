@@ -358,3 +358,33 @@ def edit_user(request, user_id):
         "roles": ["ta", "instructor", "administrator"],
     }
     return render(request, "edit_user.html", context)
+
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+from TAScheduler.models import Course, Instructor
+
+@login_required
+def assign_instructors_to_course(request, course_id):
+    # Get the course by ID
+    course = get_object_or_404(Course, course_id=course_id)
+
+    # Fetch all instructors from the database
+    instructors = Instructor.objects.all()
+
+    if request.method == "POST":
+        # Get selected instructor IDs from the form
+        selected_instructors = request.POST.getlist("instructors")
+
+        # Assign instructors to the course
+        course.instructors.set(Instructor.objects.filter(id__in=selected_instructors))
+        course.save()
+
+        messages.success(request, f"Instructors updated for course '{course.name}'.")
+        return redirect("manage_course")
+
+    # Render the template with course and instructor data
+    return render(request, "assign_instructors.html", {
+        "course": course,
+        "instructors": instructors,
+    })

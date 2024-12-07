@@ -48,7 +48,7 @@
                                 {% if user.is_ta or user.is_instructor %}
                                     <!-- Assign Button for TA and Instructor only -->
                                     <form method="GET" action="{% url 'assign_user_role' user.id %}" style="display: inline;">
-                                        <button type="submit" class="submit-btn">Assign</button>
+                                        <button type="submit" class="edit-btn">Assign</button>
                                     </form>
                                 {% endif %}
                             </td>

@@ -34,4 +34,9 @@ urlpatterns = [
 
     # Forgot Password
     path('forgot_password/', views.forgot_password, name='forgot_password'),
+    
+    
+    
+    # Assigning an instructor 
+    path('home/managecourse/assign/<str:course_id>/', views.assign_instructors_to_course, name='assign_instructors_to_course'),
 ]
