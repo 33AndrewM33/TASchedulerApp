@@ -412,7 +412,7 @@ form input, form select {
 }
 .close-button {
     background: linear-gradient(90deg, #ff4e50, #ff1c1c);
- 
+
 }
 /* Success Message */
 .success-message {
@@ -478,4 +478,3 @@ form input, form select {
         opacity: 0.5;
     }
 }
-

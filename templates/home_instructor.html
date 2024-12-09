@@ -9,10 +9,9 @@
 </head>
 <body>
     <div class="notification-container" id="notificationContainer">
-        <!-- Notification button with count and animation -->
-        <button class="notification-button animated-notification" id="notificationButton">
+        <button class="notification-button" id="notificationButton">
             NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
-        </button>
+        </button>        
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
@@ -36,17 +35,17 @@
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="container">
         <header>
             <h1>Welcome to the Instructor Dashboard!</h1>
         </header>
 
-        <nav class="navigation">
-            <a class="nav-button" href="{% url 'edit_contact_info' %}">Edit Contact Information</a>
-            <a class="nav-button" href="{% url 'view_courses' %}">View Assigned Courses</a>
-            <a class="nav-button" href="{% url 'assign_ta_to_section' %}">Assign TA to Sections</a>
-            <a class="nav-button" href="{% url 'view_public_users' %}">View Public User Information</a>
-        </nav>
+        <div class="actions">
+            <a href="{% url 'edit_contact_info' %}" class="nav-button">Edit Contact Information</a>
+            <a href="{% url 'view_courses' %}" class="nav-button">View Assigned Courses</a>
+            <a href="{% url 'assign_ta_to_section' %}" class="nav-button">Assign TA to Sections</a>
+        </div>
 
         <footer>
             <form action="{% url 'logout' %}" method="post">
@@ -64,7 +63,8 @@
 
         // Toggle the notification panel
         notificationButton.addEventListener("click", () => {
-            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
+            notificationPanel.style.display = 
+                notificationPanel.style.display === "block" ? "none" : "block";
         });
 
         // Close the notification panel
