@@ -429,3 +429,47 @@ form input, form select {
     text-align: center;
 }
 
+.notification-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background: #d7263d; /* Red for visibility */
+    border-radius: 50%;
+    padding: 5px 10px;
+    margin-left: 5px;
+}
+/* Add animation to the notification button */
+.animated-notification {
+    position: relative;
+    animation: pop-up 1.5s infinite ease-in-out; /* Add infinite animation */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@keyframes pop-up {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Optional - emphasize the notification count */
+.notification-count {
+    color: #fff;
+    background-color: red;
+    padding: 2px 5px;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 5px;
+    animation: blink 2s infinite; /* Add blinking effect */
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

@@ -262,10 +262,16 @@ def custom_logout(request):
 def home(request):
     if request.user.is_admin:
         # Admin-specific home page
+        unread_notifications_count = Notification.objects.filter(
+            recipient=request.user, is_read=False
+        ).count()
+
         notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+
         return render(request, 'home_admin.html', {
             "user": request.user,
-            "notifications": notifications
+            "notifications": notifications,
+            "unread_notifications_count": unread_notifications_count  # Add count here
         })
     elif request.user.is_instructor:
         # Redirect to instructor home page
@@ -325,7 +331,8 @@ def forgot_password(request):
     }
 
     if request.method == "POST":
-        if "temp_password" in request.POST:  # If "Send Temporary Password" is clicked
+        # Handle temporary password request
+        if "temp_password" in request.POST:
             username = request.POST.get("username", "").strip()
             email = request.POST.get("email", "").strip()
             try:
@@ -345,7 +352,8 @@ def forgot_password(request):
             except User.DoesNotExist:
                 error = "User not found or email does not match."
 
-        elif "username" in request.POST and "answer_1" in request.POST:  # If security questions are answered
+        # Handle reset password via security questions
+        elif "username" in request.POST and "answer_1" in request.POST:
             username = request.POST.get("username", "").strip()
             answer_1 = request.POST.get("answer_1", "").strip().lower()
             answer_2 = request.POST.get("answer_2", "").strip().lower()
@@ -357,8 +365,29 @@ def forgot_password(request):
             ):
                 request.session['valid_user'] = username
                 return render(request, "reset_password.html")
+
             else:
                 error = "One or more answers were incorrect. Please try again."
+
+    # Handle actual password reset
+    if request.method == "POST" and "new_password" in request.POST:
+        username = request.session.get('valid_user')
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        if username and new_password == confirm_password:
+            try:
+                user = User.objects.get(username=username)
+                user.set_password(new_password)
+                user.is_temporary_password = False  # Reset the flag
+                user.save()
+                del request.session['valid_user']  # Clear session after success
+                success_message = "Password reset successfully! Redirecting to login page..."
+                return render(request, "reset_password.html", {"success_message": success_message})
+            except User.DoesNotExist:
+                error = "User not found. Please start the process again."
+        else:
+            error = "Passwords do not match. Please try again."
 
     return render(request, "forgot_password.html", {
         "error": error,
