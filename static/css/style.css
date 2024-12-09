@@ -39,8 +39,13 @@ header h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.back-to-dashboard {
+    margin-top: 20px; /* Add space above the button */
+    display: inline-block; /* Ensure proper alignment */
+}
+
 /* Navigation Buttons */
-.nav-button {
+.nav-button {   
     padding: 12px 20px;
     font-size: 16px;
     border: none;
@@ -294,7 +299,7 @@ form input, form select {
 
 .btn-assign:hover {
     background-color: #e0a800;
-=======
+
     transform: scale(1.1);
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
 }
@@ -473,3 +478,4 @@ form input, form select {
         opacity: 0.5;
     }
 }
+

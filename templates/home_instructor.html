@@ -8,29 +8,49 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <!-- Notification Panel -->
     <div class="notification-container" id="notificationContainer">
-        <button class="notification-button" id="notificationButton">NOTIFICATIONS</button>
+        <!-- Notification button with count and animation -->
+        <button class="notification-button animated-notification" id="notificationButton">
+            NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
+        </button>
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
-                <li>No notifications available (Placeholder).</li>
+                {% for notification in notifications %}
+                    <li>
+                        <strong>{{ notification.subject }}</strong>
+                        <p>{{ notification.message }}</p>
+                        <small>{{ notification.timestamp }}</small>
+                    </li>
+                {% empty %}
+                    <li>No new notifications.</li>
+                {% endfor %}
             </ul>
-            <button class="close-button" id="closeButton">CLOSE</button>
+            <div class="notification-actions">
+                <button class="close-button" id="closeButton">CLOSE</button>
+                <form method="POST" action="{% url 'clear_notifications' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="clear-button">CLEAR ALL</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <div class="container">
         <header>
-            <h1>{{ message }}</h1>
+            <h1>Welcome to the Instructor Dashboard!</h1>
         </header>
+
+        <nav class="navigation">
+            <a class="nav-button" href="{% url 'edit_contact_info' %}">Edit Contact Information</a>
+            <a class="nav-button" href="{% url 'view_courses' %}">View Assigned Courses</a>
+            <a class="nav-button" href="{% url 'assign_ta_to_section' %}">Assign TA to Sections</a>
+            <a class="nav-button" href="{% url 'view_public_users' %}">View Public User Information</a>
+        </nav>
+
         <footer>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <a href="{% url 'edit_contact_info' %}" class="nav-link">Edit Contact Information</a>
-                <a href="{% url 'view_courses' %}" class="nav-link">View Assigned Courses</a>
-                <a href="{% url 'assign_ta_to_section' %}" class="nav-link">Assign TA to Sections</a>
-
                 <input type="submit" class="logout-button" value="Logout">
             </form>
         </footer>
@@ -44,7 +64,7 @@
 
         // Toggle the notification panel
         notificationButton.addEventListener("click", () => {
-            notificationPanel.style.display = "block";
+            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
         });
 
         // Close the notification panel

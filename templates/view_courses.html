@@ -1,23 +1,47 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Courses</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <div class="container">
-        <h1>My Courses</h1>
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
+    <div class="notification-container" id="notificationContainer">
+        <!-- Notification button with count and animation -->
+        <button class="notification-button animated-notification" id="notificationButton">
+            NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
+        </button>
+        <div class="notification-panel" id="notificationPanel">
+            <h2>Notifications</h2>
+            <ul>
+                {% for notification in notifications %}
+                    <li>
+                        <strong>{{ notification.subject }}</strong>
+                        <p>{{ notification.message }}</p>
+                        <small>{{ notification.timestamp }}</small>
+                    </li>
+                {% empty %}
+                    <li>No new notifications.</li>
                 {% endfor %}
             </ul>
-        {% endif %}
-        <table class="course-table">
+            <div class="notification-actions">
+                <button class="close-button" id="closeButton">CLOSE</button>
+                <form method="POST" action="{% url 'clear_notifications' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="clear-button">CLEAR ALL</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>My Courses</h1>
+        </header>
+
+        <table class="user-table">
             <thead>
                 <tr>
                     <th>Course ID</th>
@@ -38,12 +62,33 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="no-data">You are not assigned to any courses.</td>
+                    <td colspan="5">No courses found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <a href="{% url 'home_instructor' %}" class="btn btn-back">Back to Dashboard</a>
+
+        <footer>
+            <a href="{% url 'home_instructor' %}" class="nav-button back-to-dashboard">Back to Dashboard</a>
+        </footer>
+        
     </div>
+
+    <!-- JavaScript -->
+    <script>
+        const notificationButton = document.getElementById("notificationButton");
+        const notificationPanel = document.getElementById("notificationPanel");
+        const closeButton = document.getElementById("closeButton");
+
+        // Toggle the notification panel
+        notificationButton.addEventListener("click", () => {
+            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
+        });
+
+        // Close the notification panel
+        closeButton.addEventListener("click", () => {
+            notificationPanel.style.display = "none";
+        });
+    </script>
 </body>
 </html>

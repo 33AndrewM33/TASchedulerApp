@@ -13,7 +13,7 @@ urlpatterns = [
 
     # Role-based Home Pages
     path('home/ta/', views.home_ta, name='home_ta'),  # TA home page
-    path('home/instructor/', views.home_instructor, name='home_instructor'),  # Instructor home page
+    path('home/instructor/', views.home_instructor, name='home_instructor'),
 
     # Notifications
     path('notifications/clear/', views.clear_notifications, name='clear_notifications'),
@@ -46,7 +46,10 @@ urlpatterns = [
     path('home/instructor/view_courses/', views.view_courses, name='view_courses'),
     path('home/instructor/assign_ta_to_section/', views.assign_ta_to_section, name='assign_ta_to_section'),
     path('unassign_ta/<int:section_id>/<int:ta_id>/', views.unassign_ta, name='unassign_ta'),
-    
+    path('home/instructor/view_public_users/', views.view_public_users, name='view_public_users'),
+    path('clear_notifications/', views.clear_notifications, name='clear_notifications'),
 ]
+    
+
 
 
