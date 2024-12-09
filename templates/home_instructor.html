@@ -10,7 +10,9 @@
 <body>
     <!-- Notification Panel -->
     <div class="notification-container" id="notificationContainer">
-        <button class="notification-button" id="notificationButton">NOTIFICATIONS</button>
+        <button class="notification-button" id="notificationButton">
+            NOTIFICATIONS <span id="notificationCount">0</span>
+        </button>
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
@@ -20,17 +22,21 @@
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="container">
         <header>
-            <h1>{{ message }}</h1>
+            <h1>Welcome to the Instructor Dashboard!</h1>
         </header>
+
+        <div class="actions">
+            <a href="{% url 'edit_contact_info' %}" class="nav-button">Edit Contact Information</a>
+            <a href="{% url 'view_courses' %}" class="nav-button">View Assigned Courses</a>
+            <a href="{% url 'assign_ta_to_section' %}" class="nav-button">Assign TA to Sections</a>
+        </div>
+
         <footer>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <a href="{% url 'edit_contact_info' %}" class="nav-link">Edit Contact Information</a>
-                <a href="{% url 'view_courses' %}" class="nav-link">View Assigned Courses</a>
-                <a href="{% url 'assign_ta_to_section' %}" class="nav-link">Assign TA to Sections</a>
-
                 <input type="submit" class="logout-button" value="Logout">
             </form>
         </footer>
@@ -44,7 +50,8 @@
 
         // Toggle the notification panel
         notificationButton.addEventListener("click", () => {
-            notificationPanel.style.display = "block";
+            notificationPanel.style.display = 
+                notificationPanel.style.display === "block" ? "none" : "block";
         });
 
         // Close the notification panel
