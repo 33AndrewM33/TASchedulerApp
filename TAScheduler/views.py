@@ -382,6 +382,17 @@ def forgot_password(request):
                 user.is_temporary_password = False  # Reset the flag
                 user.save()
                 del request.session['valid_user']  # Clear session after success
+
+                # Notify admins about the password reset
+                admins = User.objects.filter(is_admin=True)
+                for admin in admins:
+                    Notification.objects.create(
+                        sender=user,
+                        recipient=admin,
+                        subject="User Password Reset",
+                        message=f"The user {user.first_name} {user.last_name} ({user.email}) has successfully reset their password.",
+                    )
+
                 success_message = "Password reset successfully! Redirecting to login page..."
                 return render(request, "reset_password.html", {"success_message": success_message})
             except User.DoesNotExist:
