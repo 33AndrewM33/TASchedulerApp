@@ -14,7 +14,7 @@ urlpatterns = [
 
     # Role-based Home Pages
     path('home/ta/', views.home_ta, name='home_ta'),  # TA home page
-    path('home/instructor/', views.home_instructor, name='home_instructor'),  # Instructor home page
+    path('home/instructor/', views.home_instructor, name='home_instructor'),
 
     # Notifications
     path('notifications/clear/', views.clear_notifications, name='clear_notifications'),

@@ -311,9 +311,19 @@ def clear_notifications(request):
 
 @login_required
 def home_instructor(request):
+    if not request.user.is_instructor:
+        return redirect('home')  # Redirect if the user is not an instructor
+
+    # Fetch notifications for the instructor
+    notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications_count = unread_notifications.count()
+
     return render(request, 'home_instructor.html', {
         "user": request.user,
-        "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
+        "notifications": unread_notifications,
+        "unread_notifications_count": unread_notifications_count,
+        "message": "Welcome to the Instructor Dashboard!",
     })
 
 
@@ -503,10 +513,21 @@ def assign_instructors_to_course(request, course_id):
         selected_instructors = request.POST.getlist("instructors")
 
         # Assign instructors to the course
-        course.instructors.set(Instructor.objects.filter(id__in=selected_instructors))
+        new_instructors = Instructor.objects.filter(id__in=selected_instructors)
+        course.instructors.set(new_instructors)  # Update course instructors
         course.save()
 
-        messages.success(request, f"Instructors updated for course '{course.name}'.")
+        # Send notifications to the assigned instructors
+        for instructor in new_instructors:
+            Notification.objects.create(
+                sender=request.user,  # The user assigning the instructors
+                recipient=instructor.user,  # The instructor receiving the notification
+                subject="Course Assignment Notification",
+                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
+            )
+
+        # Add a success message
+        messages.success(request, f"Instructors updated for course '{course.name}'. Notifications sent to the assigned instructors.")
         return redirect("manage_course")
 
     # Render the template with course and instructor data
@@ -514,6 +535,7 @@ def assign_instructors_to_course(request, course_id):
         "course": course,
         "instructors": instructors,
     })
+
 
 
 @login_required
@@ -606,3 +628,16 @@ def unassign_ta(request, section_id, ta_id):
     # Notify the instructor
     messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been unassigned from Section {section.section_id}.")
     return redirect('assign_ta_to_section')
+
+@login_required
+def view_public_users(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Fetch all users' public information
+    users = User.objects.values('first_name', 'last_name', 'email', 'phone_number')
+
+    return render(request, 'view_public_users.html', {
+        'users': users,
+    })

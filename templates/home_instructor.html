@@ -8,17 +8,30 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <!-- Notification Panel -->
     <div class="notification-container" id="notificationContainer">
         <button class="notification-button" id="notificationButton">
-            NOTIFICATIONS <span id="notificationCount">0</span>
-        </button>
+            NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
+        </button>        
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
-                <li>No notifications available (Placeholder).</li>
+                {% for notification in notifications %}
+                    <li>
+                        <strong>{{ notification.subject }}</strong>
+                        <p>{{ notification.message }}</p>
+                        <small>{{ notification.timestamp }}</small>
+                    </li>
+                {% empty %}
+                    <li>No new notifications.</li>
+                {% endfor %}
             </ul>
-            <button class="close-button" id="closeButton">CLOSE</button>
+            <div class="notification-actions">
+                <button class="close-button" id="closeButton">CLOSE</button>
+                <form method="POST" action="{% url 'clear_notifications' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="clear-button">CLEAR ALL</button>
+                </form>
+            </div>
         </div>
     </div>
 
