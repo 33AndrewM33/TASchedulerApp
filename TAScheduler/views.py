@@ -61,6 +61,7 @@ def create_section(request):
             messages.error(request, f"An error occurred: {str(e)}")
     courses = Course.objects.all()
     return render(request, 'create_section.html', {"user": request.user, "courses": courses})
+
 @login_required
 def edit_section(request, section_id):
     section = get_object_or_404(Section, id=section_id)
@@ -291,6 +292,7 @@ def clear_notifications(request):
         Notification.objects.filter(recipient=request.user).delete()
         messages.success(request, "All notifications cleared successfully.")
     return redirect('home')
+
 @login_required
 def home_instructor(request):
     return render(request, 'home_instructor.html', {
@@ -306,6 +308,7 @@ def clear_notifications(request):
         Notification.objects.filter(recipient=request.user).delete()
         messages.success(request, "All notifications cleared successfully.")
     return redirect('home')
+
 @login_required
 def home_instructor(request):
     return render(request, 'home_instructor.html', {
@@ -466,6 +469,7 @@ def send_temp_password(request):
             return JsonResponse({"message": "User not found or email does not match."}, status=404)
 
     return JsonResponse({"message": "Invalid request."}, status=400)
+
 @login_required
 def assign_instructor_to_course_account_dashboard(request, user_id):
     instructor = get_object_or_404(User, id=user_id, is_instructor=True)
@@ -510,3 +514,95 @@ def assign_instructors_to_course(request, course_id):
         "course": course,
         "instructors": instructors,
     })
+
+
+@login_required
+def edit_contact_info(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    if request.method == "POST":
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        home_address = request.POST.get('home_address')
+
+        # Update user fields
+        request.user.email = email
+        request.user.phone_number = phone_number
+        request.user.home_address = home_address
+        request.user.save()
+
+        messages.success(request, "Your contact information has been updated successfully.")
+        return redirect('edit_contact_info')
+
+    return render(request, 'edit_contact_info.html', {
+        'user': request.user,
+    })
+    
+@login_required
+def view_courses(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    courses = request.user.instructor_profile.courses.all()
+
+    return render(request, 'view_courses.html', {
+        'user': request.user,
+        'courses': courses,
+    })
+    
+    
+@login_required
+def assign_ta_to_section(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Get sections taught by the instructor
+    instructor = request.user.instructor_profile
+    sections = Section.objects.filter(course__instructors=instructor)
+
+    # Get all TAs
+    tas = TA.objects.all()
+
+    # Handle assignment
+    if request.method == "POST":
+        ta_id = request.POST.get('ta_id')
+        section_id = request.POST.get('section_id')
+
+        # Get the TA and Section
+        ta = get_object_or_404(TA, id=ta_id)
+        section = get_object_or_404(Section, id=section_id)
+
+        # Assign the TA to the section
+        section.assigned_tas.add(ta)
+        section.save()
+
+        messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been assigned to Section {section.section_id}.")
+        return redirect('assign_ta_to_section')
+
+    return render(request, 'assign_ta_to_section.html', {
+        'tas': tas,
+        'sections': sections,
+    })
+
+@login_required
+def unassign_ta(request, section_id, ta_id):
+    # Check if the user is an instructor
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Fetch the section and TA
+    section = get_object_or_404(Section, id=section_id)
+    ta = get_object_or_404(TA, id=ta_id)
+
+    # Remove the TA from the section's assigned TAs
+    section.assigned_tas.remove(ta)
+    section.save()
+
+    # Notify the instructor
+    messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been unassigned from Section {section.section_id}.")
+    return redirect('assign_ta_to_section')

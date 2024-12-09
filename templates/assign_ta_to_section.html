@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign TA to Section</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Page Title -->
+        <h1>Assign TA to Section</h1>
+
+        <!-- Display messages -->
+        {% if messages %}
+            <div class="message-container">
+                {% for message in messages %}
+                    <p class="{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Form to assign TA -->
+        <form method="POST" class="form-container">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="section">Select Section:</label>
+                <select name="section_id" id="section" class="form-control" required>
+                    <option value="" disabled selected>Select a Section</option>
+                    {% for section in sections %}
+                    <option value="{{ section.id }}">
+                        {{ section.course.name }} - Section {{ section.section_id }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ta">Select TA:</label>
+                <select name="ta_id" id="ta" class="form-control" required>
+                    <option value="" disabled selected>Select a TA</option>
+                    {% for ta in tas %}
+                    <option value="{{ ta.id }}">{{ ta.user.first_name }} {{ ta.user.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-assign">Assign</button>
+                <a href="{% url 'home_instructor' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+        </form>
+
+        <!-- Existing TA Assignments -->
+        <h2>Existing TA Assignments</h2>
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Assigned TAs</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for section in sections %}
+                <tr>
+                    <td>{{ section.course.name }} - Section {{ section.section_id }}</td>
+                    <td>
+                        {% for ta in section.assigned_tas.all %}
+                            {{ ta.user.first_name }} {{ ta.user.last_name }}
+                        {% empty %}
+                            No TAs assigned
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for ta in section.assigned_tas.all %}
+                            <a href="{% url 'unassign_ta' section.id ta.id %}" class="btn delete-btn">Unassign</a>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
