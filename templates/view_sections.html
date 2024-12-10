@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sections</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="notification-container" id="notificationContainer">
+        <!-- Notification button with count and animation -->
+        <button class="notification-button animated-notification" id="notificationButton">
+            NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
+        </button>
+        <div class="notification-panel" id="notificationPanel">
+            <h2>Notifications</h2>
+            <ul>
+                {% for notification in notifications %}
+                    <li>
+                        <strong>{{ notification.subject }}</strong>
+                        <p>{{ notification.message }}</p>
+                        <small>{{ notification.timestamp }}</small>
+                    </li>
+                {% empty %}
+                    <li>No new notifications.</li>
+                {% endfor %}
+            </ul>
+            <div class="notification-actions">
+                <button class="close-button" id="closeButton">CLOSE</button>
+                <form method="POST" action="{% url 'clear_notifications' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="clear-button">CLEAR ALL</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>My Sections</h1>
+        </header>
+
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Section ID</th>
+                    <th>Course Name</th>
+                    <th>Location</th>
+                    <th>Meeting Time</th>
+                    <th>Assigned TAs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for section in sections %}
+                <tr>
+                    <td>{{ section.section_id }}</td>
+                    <td>{{ section.course }}</td>
+                    <td>{{ section.location }}</td>
+                    <td>{{ section.meeting_time }}</td>
+                    <td>{{ section.assigned_tas }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No sections found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <footer>
+            <a href="{% url 'home_ta' %}" class="nav-button back-to-dashboard">Back to Dashboard</a>
+        </footer>
+        
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const notificationButton = document.getElementById("notificationButton");
+        const notificationPanel = document.getElementById("notificationPanel");
+        const closeButton = document.getElementById("closeButton");
+
+        // Toggle the notification panel
+        notificationButton.addEventListener("click", () => {
+            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
+        });
+
+        // Close the notification panel
+        closeButton.addEventListener("click", () => {
+            notificationPanel.style.display = "none";
+        });
+    </script>
+</body>
+</html>

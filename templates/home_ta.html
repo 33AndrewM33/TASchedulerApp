@@ -14,7 +14,7 @@
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
-                <li>No notifications available (Placeholder).</li>
+                <li>No notifications available</li>
             </ul>
             <button class="close-button" id="closeButton">CLOSE</button>
         </div>
@@ -22,8 +22,12 @@
 
     <div class="container">
         <header>
-            <h1>{{ message }}</h1>
+             <h1>Welcome to the TA Dashboard!</h1>
         </header>
+        <div class="actions">
+            <a href="{% url 'edit_contact_info' %}" class="nav-button">Edit Contact Information</a>
+            <a href="{% url 'view_assigned_sections' %}" class="nav-button">View Assigned Sections</a>
+        </div>
         <footer>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}

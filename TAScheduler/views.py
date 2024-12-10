@@ -329,9 +329,19 @@ def home_instructor(request):
 
 @login_required
 def home_ta(request):
+
+    if not request.user.is_ta:
+        return redirect('home')  # Redirect if the user is not an instructor
+
+    # Fetch notifications for the TA
+    notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications_count = unread_notifications.count()
+
     return render(request, 'home_ta.html', {
         "user": request.user,
-        "message": "Welcome to the TA Dashboard! Placeholder content here.",
+        "notifications": unread_notifications,
+        "unread_notifications_count": unread_notifications_count
     })
 
 def forgot_password(request):
@@ -540,7 +550,7 @@ def assign_instructors_to_course(request, course_id):
 
 @login_required
 def edit_contact_info(request):
-    if not request.user.is_instructor:
+    if not (request.user.is_instructor or request.user.is_ta):
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
 
@@ -574,7 +584,19 @@ def view_courses(request):
         'user': request.user,
         'courses': courses,
     })
-    
+
+@login_required
+def view_sections(request):
+    if not request.user.is_ta:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    sections = request.user.ta_profile.sections.all()
+
+    return render(request, 'view_sections.html', {
+        'user': request.user,
+        'sections': sections,
+    })
     
 @login_required
 def assign_ta_to_section(request):
@@ -631,7 +653,7 @@ def unassign_ta(request, section_id, ta_id):
 
 @login_required
 def view_public_users(request):
-    if not request.user.is_instructor:
+    if not request.user.is_instructor :
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
 
