@@ -160,3 +160,83 @@ class CreateSectionTestCase(TestCase):
         final_count = Section.objects.count()
 
         self.assertEqual(initial_count, final_count, "No new section should be added on failure.")
+
+    def test_unauthenticated_user_access(self):
+        """Test that unauthenticated users cannot create sections"""
+        # Logout the admin user
+        self.client.logout()
+
+        # Attempt to create a section
+        response = self.client.post("/home/managesection/create/", data=self.valid_lecture_data)
+
+        # Should redirect to login page
+        self.assertEqual(response.status_code, 302, "Unauthenticated user should be redirected")
+        self.assertIn('login', response.url, "Should redirect to login page")
+
+        # Verify no section was created
+        section = Section.objects.filter(section_id=self.valid_lecture_data["section_id"]).first()
+        self.assertIsNone(section, "Section should not be created by unauthenticated user")
+
+
+    def test_invalid_section_type(self):
+        """Test creation with invalid section type"""
+        invalid_type_data = self.valid_lecture_data.copy()
+        invalid_type_data['section_type'] = 'InvalidType'
+
+        response = self.client.post("/home/managesection/create/", data=invalid_type_data)
+
+        # Check response
+        self.assertEqual(response.status_code, 200, "Should return to form page")
+
+        # Verify neither Lecture nor Lab was created
+        section = Section.objects.filter(section_id=invalid_type_data["section_id"]).first()
+        if section:
+            self.assertEqual(Lecture.objects.filter(section=section).count(), 0,
+                             "No lecture should be created for invalid type")
+            self.assertEqual(Lab.objects.filter(section=section).count(), 0,
+                             "No lab should be created for invalid type")
+
+    def test_section_creation_with_special_characters(self):
+        """Test creation with special characters in fields"""
+        special_chars_data = self.valid_lecture_data.copy()
+        special_chars_data['location'] = "Room #123 & Building's Main-Hall"
+        special_chars_data['meeting_time'] = "Mon/Wed 2:00-3:30 (EST) @ Main Campus"
+        special_chars_data['section_id'] = 30
+
+        response = self.client.post("/home/managesection/create/", data=special_chars_data)
+
+        # Should create successfully
+        section = Section.objects.filter(section_id=30).first()
+        self.assertIsNotNone(section, "Section should be created with special characters")
+        self.assertEqual(section.location, special_chars_data['location'],
+                         "Location should be saved with special characters intact")
+        self.assertEqual(section.meeting_time, special_chars_data['meeting_time'],
+                         "Meeting time should be saved with special characters intact")
+
+    def test_create_section_with_boundary_values(self):
+        """Test creation with boundary values for fields"""
+        # Create data with maximum length values
+        max_length_data = self.valid_lecture_data.copy()
+        max_length_data['location'] = "A" * 30  # max_length for location
+        max_length_data['section_id'] = 40
+
+        response = self.client.post("/home/managesection/create/", data=max_length_data)
+
+        # Check if section was created
+        section = Section.objects.filter(section_id=40).first()
+        self.assertIsNotNone(section, "Section should be created with maximum length values")
+        self.assertEqual(section.location, max_length_data['location'],
+                         "Location should be saved with maximum length")
+
+    def test_get_create_section_page(self):
+        """Test accessing the create section page with GET request"""
+        response = self.client.get("/home/managesection/create/")
+
+        # Verify response
+        self.assertEqual(response.status_code, 200, "Should access create section page")
+        self.assertTemplateUsed(response, 'create_section.html',
+                                "Should use create_section.html template")
+
+        # Check if courses are in context
+        self.assertTrue('courses' in response.context,
+                        "Courses should be included in template context")

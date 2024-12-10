@@ -28,7 +28,7 @@ class InstructorTestCase(TestCase):
             last_name="Doe",
             is_instructor=True
         )
-        self.instructor = Instructor.objects.create(user=self.instructor_user, max_assignments=3)
+        self.instructor = Instructor.objects.create(user=self.instructor_user)
 
         # Create some test courses
         self.courses = [
