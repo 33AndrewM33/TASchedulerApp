@@ -93,5 +93,93 @@ class AdminDeleteCourseTestCase(TestCase):
             "The error message is incorrect or not displayed."
         )
 
+    def test_delete_course_unauthenticated(self):
+        """
+        Test that unauthenticated users cannot delete courses.
+        """
+        # Logout the admin user
+        self.client.logout()
 
+        # Attempt to delete course without being logged in
+        response = self.client.post(reverse("delete_course", args=[self.course.course_id]))
+
+        # Verify redirection to login page
+        self.assertEqual(response.status_code, 302, "Expected redirect to login page")
+        self.assertIn('login', response.url, "Should redirect to login page")
+
+        # Verify course still exists
+        self.assertTrue(
+            Course.objects.filter(course_id=self.course.course_id).exists(),
+            "Course should not be deleted by unauthenticated user"
+        )
+
+    def test_delete_course_get_request(self):
+        """
+        Test deletion via GET request is processed the same as POST request.
+        """
+        # Verify course exists before deletion
+        self.assertTrue(
+            Course.objects.filter(course_id=self.course.course_id).exists(),
+            "Course should exist before deletion"
+        )
+
+        # Attempt to delete course using GET request
+        response = self.client.get(reverse("delete_course", args=[self.course.course_id]))
+
+        # Verify redirect to manage course page
+        self.assertEqual(
+            response.status_code, 302,
+            "GET request should redirect"
+        )
+        self.assertRedirects(
+            response, reverse("manage_course"),
+            msg_prefix="Should redirect to manage course page"
+        )
+
+        # Verify course was deleted by GET request
+        self.assertFalse(
+            Course.objects.filter(course_id=self.course.course_id).exists(),
+            "Course should be deleted after GET request"
+        )
+
+        # Check success message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(
+            str(messages[0]), f"Course 'Intro to Computer Science' deleted successfully.",
+            "The success message is incorrect or not displayed."
+        )
+
+    def test_delete_nonexistent_course(self):
+        """
+        Test attempting to delete a course that has already been deleted.
+        """
+        # First delete the course normally
+        self.client.post(reverse("delete_course", args=[self.course.course_id]))
+
+        # Verify first deletion was successful
+        self.assertFalse(
+            Course.objects.filter(course_id=self.course.course_id).exists(),
+            "Course should be deleted after first deletion"
+        )
+
+        # Attempt to delete the same course again
+        response = self.client.post(reverse("delete_course", args=[self.course.course_id]))
+
+        # Verify redirect
+        self.assertEqual(
+            response.status_code, 302,
+            "Should redirect after attempting to delete nonexistent course"
+        )
+        self.assertRedirects(
+            response, reverse("manage_course"),
+            msg_prefix="Should redirect to manage course page"
+        )
+
+        # Check that at least one message contains error text
+        messages = list(get_messages(response.wsgi_request))
+        error_messages = [msg for msg in messages if "Error deleting course:" in str(msg)]
+        self.assertGreater(
+            len(error_messages), 0,
+            "Should show at least one error message when deleting nonexistent course"
+        )
 
