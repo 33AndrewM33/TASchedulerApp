@@ -641,3 +641,30 @@ def view_public_users(request):
     return render(request, 'view_public_users.html', {
         'users': users,
     })
+    
+@login_required
+def unassign_instructor(request, course_id, instructor_id):
+    # Get the course and instructor objects
+    course = get_object_or_404(Course, id=course_id)
+    instructor = get_object_or_404(Instructor, id=instructor_id)
+
+    if request.method == "POST":  # Ensure it only processes POST requests
+        # Remove the instructor from the course
+        course.instructors.remove(instructor)
+        course.save()
+
+        # Send a notification to the instructor
+        Notification.objects.create(
+            recipient=instructor.user,
+            subject="Unassigned from Course",
+            message=f"You have been unassigned from the course '{course.name}' (ID: {course.course_id}).",
+            sender=request.user
+        )
+
+        # Add a success message
+        messages.success(request, f"Instructor {instructor.user.first_name} {instructor.user.last_name} has been unassigned from course {course.name}.")
+        return redirect('manage_course')
+
+    # Redirect back if not a POST request
+    messages.error(request, "Invalid request method.")
+    return redirect('manage_course')
