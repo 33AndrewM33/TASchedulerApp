@@ -335,8 +335,6 @@ def home_ta(request):
     })
 
 def forgot_password(request):
-   
-def forgot_password(request):
     error = None
     success_message = None  # Added to store the success message
     security_questions = {
@@ -348,24 +346,24 @@ def forgot_password(request):
     if request.method == "POST":
         # Handle temporary password request
         if "temp_password" in request.POST:
-            username = request.POST.get("temp_username", "").strip()
-            email = request.POST.get("temp_email", "").strip()
+            username = request.POST.get("temp_username", "")
+            email = request.POST.get("temp_email", "")
             try:
+                print(username, email)
                 user = User.objects.get(username=username, email=email)
                 temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-
                 user.set_password(temp_password)
                 user.is_temporary_password = True
                 user.save()
-
+                success_message = "Temporary password sent to your email!"
                 send_mail(
                     subject="Your Temporary Password",
                     message=f"Your temporary password is: {temp_password}\nPlease change your password after logging in.",
                     from_email=settings.EMAIL_HOST_USER,
                     recipient_list=[email],
                 )
-                success_message = "Temporary password sent to your email!"
-            except User.DoesNotExist:
+
+            except(User.DoesNotExist):
                 error = "User not found or email does not match."
 
         # Handle reset password via security questions
@@ -420,7 +418,6 @@ def forgot_password(request):
         "error": error,
         "success_message": success_message,
     })
-
 @login_required
 def edit_user(request, user_id):
     user_to_edit = get_object_or_404(User, id=user_id)
@@ -564,7 +561,7 @@ def edit_contact_info(request):
     return render(request, 'edit_contact_info.html', {
         'user': request.user,
     })
-    
+
 @login_required
 def view_courses(request):
     if not request.user.is_instructor:
@@ -577,8 +574,8 @@ def view_courses(request):
         'user': request.user,
         'courses': courses,
     })
-    
-    
+
+
 @login_required
 def assign_ta_to_section(request):
     if not request.user.is_instructor:
