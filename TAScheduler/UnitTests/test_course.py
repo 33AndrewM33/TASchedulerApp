@@ -105,3 +105,109 @@ class CourseModelTestCase(TestCase):
             )
             invalid_course.full_clean()  # Triggers model validation
             invalid_course.save()
+
+    def test_course_name_max_length(self):
+        with self.assertRaises(ValidationError):
+            long_name = "A" * 256  # Assuming max length is 255
+            invalid_course = Course(
+                course_id="CS202",
+                semester="Fall 2024",
+                name=long_name,
+                description="Name too long.",
+                num_of_sections=1,
+                modality="Online"
+            )
+            invalid_course.full_clean()
+
+    def test_course_without_name(self):
+        with self.assertRaises(ValidationError):
+            invalid_course = Course(
+                course_id="CS203",
+                semester="Fall 2024",
+                name=None,
+                description="Name is required.",
+                num_of_sections=1,
+                modality="Online"
+            )
+            invalid_course.full_clean()
+
+    def test_valid_course_modality(self):
+        valid_modalities = ["Online", "In-person", "Hybrid"]
+        for modality in valid_modalities:
+            course = Course.objects.create(
+                course_id=f"CS_{modality}",
+                semester="Fall 2024",
+                name=f"Course with {modality}",
+                description="Testing modality.",
+                num_of_sections=1,
+                modality=modality
+            )
+            self.assertEqual(course.modality, modality)
+
+    def test_duplicate_course_id(self):
+        with self.assertRaises(Exception):
+            Course.objects.create(
+                course_id="CS101",  # Duplicate ID
+                semester="Spring 2025",
+                name="Duplicate ID Course",
+                description="Testing duplicate course ID.",
+                num_of_sections=1,
+                modality="In-person"
+            )
+
+    def test_duplicate_course_id2(self):
+        with self.assertRaises(Exception):
+            Course.objects.create(
+                course_id="CS101",  # Duplicate ID
+                semester="Spring 2025",
+                name="Duplicate ID Course",
+                description="Testing duplicate course ID.",
+                num_of_sections=1,
+                modality="In-person"
+            )
+
+    def test_course_deletion_orphaned_sections(self):
+        section = Section.objects.create(
+            section_id=10,
+            course=self.course,
+            location="Room 203",
+            meeting_time="TTh 1:00-2:00 PM"
+        )
+        self.course.delete()
+        with self.assertRaises(Section.DoesNotExist):
+            Section.objects.get(section_id=section.section_id)
+
+    def test_update_section_course(self):
+        new_course = Course.objects.create(
+            course_id="CS102",
+            semester="Spring 2025",
+            name="New Course",
+            description="Another course.",
+            num_of_sections=2,
+            modality="In-person"
+        )
+        section = Section.objects.create(
+            section_id=11,
+            course=self.course,
+            location="Room 204",
+            meeting_time="MW 3:00-4:00 PM"
+        )
+        section.course = new_course
+        section.save()
+        self.assertEqual(section.course, new_course)
+
+    def test_retrieve_all_sections(self):
+        Section.objects.create(
+            section_id=1,
+            course=self.course,
+            location="Room 101",
+            meeting_time="Monday 10:00-11:30"
+        )
+        Section.objects.create(
+            section_id=2,
+            course=self.course,
+            location="Room 102",
+            meeting_time="Wednesday 2:00-3:30"
+        )
+        sections = self.course.sections.all()
+        self.assertEqual(sections.count(), 2)

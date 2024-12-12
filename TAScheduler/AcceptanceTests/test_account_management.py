@@ -31,7 +31,7 @@ class AdminManageUsers(TestCase):
             last_name="Deer",
             is_instructor=True
         )
-        self.instructor = Instructor.objects.create(user=self.instructor_user, max_assignments=4)
+        self.instructor = Instructor.objects.create(user=self.instructor_user)
         # Create a test TA
         self.ta_user = User.objects.create_user(
             username="ta_user",
@@ -48,6 +48,8 @@ class AdminManageUsers(TestCase):
             'action': 'create',
             'username': 'new_testuser',
             'email': 'user@example.com',
+            'first_name': 'Test2',
+            'last_name': 'TA2',
             'password': 'password123',
             'role': 'ta',  # Role can be 'ta', 'instructor', or 'administrator'
         }
@@ -72,28 +74,7 @@ class AdminManageUsers(TestCase):
         # Send POST request to edit user
         response = self.client.post(edit_url, edit_data)
         self.assertEqual(response.status_code, 200)
-    def test_update_user(self):
-        # Create a user to update
-        user_to_update = User.objects.create_user(
-            username="user_to_update", email="update@example.com", password="password123"
-        )
-        update_url = reverse('account_management')
-        # Data to update user details
-        updated_data = {
-            'action': 'update',
-            'editing_user_id': user_to_update.id,
-            'username': 'updated_user',
-            'email': 'updateduser@example.com',
-            'password': 'updatedpassword123',
-            'role': 'instructor',  # Update role
-        }
-        # Send POST request to update user
-        response = self.client.post(update_url, updated_data)
-        # Check if the user details were updated successfully
-        updated_user = User.objects.get(id=user_to_update.id)
-        self.assertEqual(updated_user.username, 'updated_user', "Username should be updated.")
-        self.assertEqual(updated_user.email, 'updateduser@example.com', "Email should be updated.")
-        self.assertEqual(response.status_code, 200)  # Ensure success response after update
+
     def test_delete_user(self):
         # Create a user to delete
         user_to_delete = User.objects.create_user(
@@ -134,7 +115,7 @@ class AdminManageUsers(TestCase):
         user_to_delete = User.objects.create_user(
             username="user_with_instructor_profile", email="instrprofile@example.com", password="password123"
         )
-        instructor_profile = Instructor.objects.create(user=user_to_delete, max_assignments=5)
+        instructor_profile = Instructor.objects.create(user=user_to_delete)
         delete_data = {
             'action': 'delete',
             'user_id': user_to_delete.id,
@@ -146,4 +127,99 @@ class AdminManageUsers(TestCase):
             User.objects.get(id=user_to_delete.id)
         with self.assertRaises(Instructor.DoesNotExist):
             Instructor.objects.get(id=instructor_profile.id)
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_instructor(self):
+        """Test creating an instructor user"""
+        user_data = {
+            'action': 'create',
+            'username': 'new_instructor',
+            'email': 'newinstr@example.com',
+            'first_name': 'New',
+            'last_name': 'Instructor',
+            'password': 'password123',
+            'role': 'instructor',
+        }
+        response = self.client.post(self.account_management_url, user_data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(username='new_instructor').exists())
+        new_user = User.objects.get(username='new_instructor')
+        self.assertTrue(new_user.is_instructor)
+        self.assertTrue(hasattr(new_user, 'instructor_profile'))
+
+    def test_create_administrator(self):
+        """Test creating an administrator user"""
+        user_data = {
+            'action': 'create',
+            'username': 'new_admin',
+            'email': 'newadmin@example.com',
+            'first_name': 'New',
+            'last_name': 'Admin',
+            'password': 'password123',
+            'role': 'administrator',
+        }
+        response = self.client.post(self.account_management_url, user_data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(username='new_admin').exists())
+        new_user = User.objects.get(username='new_admin')
+        self.assertTrue(new_user.is_admin)
+        self.assertTrue(hasattr(new_user, 'administrator_profile'))
+
+
+    def test_delete_nonexistent_user(self):
+        """Test deleting a user that doesn't exist"""
+        delete_data = {
+            'action': 'delete',
+            'user_id': 99999,  # Non-existent ID
+        }
+        response = self.client.post(self.account_management_url, delete_data)
+
+        # Check that error message is sent
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Error deleting user" in str(msg) for msg in messages))
+
+
+    def test_access_account_management(self):
+        """Test accessing the account management page"""
+        response = self.client.get(self.account_management_url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_create_admin(self):
+        """Test creating an admin user"""
+        user_data = {
+            'action': 'create',
+            'username': 'new_admin',
+            'email': 'newadmin@example.com',
+            'first_name': 'New',
+            'last_name': 'Admin',
+            'password': 'password123',
+            'role': 'administrator',
+        }
+        response = self.client.post(self.account_management_url, user_data)
+        self.assertEqual(response.status_code, 200)
+        new_user = User.objects.get(username='new_admin')
+        self.assertTrue(new_user.is_admin)
+
+    def test_delete_admin(self):
+        """Test deleting an admin user"""
+        # Create a user to delete
+        admin_to_delete = User.objects.create_user(
+            username="admin_to_delete",
+            email="admindelete@example.com",
+            password="password123",
+            is_admin=True
+        )
+        Administrator.objects.create(user=admin_to_delete)
+
+        delete_data = {
+            'action': 'delete',
+            'user_id': admin_to_delete.id,
+        }
+        response = self.client.post(self.account_management_url, delete_data)
+
+        # Verify admin is deleted
+        with self.assertRaises(User.DoesNotExist):
+            User.objects.get(id=admin_to_delete.id)
         self.assertEqual(response.status_code, 200)

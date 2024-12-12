@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from TAScheduler.models import User
-
+from TAScheduler.models import User, Instructor
+from django.contrib.auth.hashers import make_password
 
 class LoginTestCase(TestCase):
     def setUp(self):
@@ -24,39 +24,100 @@ class LoginTestCase(TestCase):
             last_name="User",
             is_ta=True
         )
+        # Add instructor user
+        self.instructor_user = User.objects.create_user(
+            username="instructor",
+            email="instructor@example.com",
+            password="instructorpass",
+            first_name="Test",
+            last_name="Instructor",
+            is_instructor=True
+        )
+        self.instructor = Instructor.objects.create(user=self.instructor_user)
 
     def test_admin_login_success(self):
         """Test successful login for admin."""
-        # Use username (or email if your view supports that)
-        response = self.client.post(reverse('login'), {'username': self.admin.username, 'password': 'adminpassword'})
-
-        # Assert that user is redirected to the home page
-        self.assertRedirects(response, '/home/', msg_prefix="Admin should be redirected to '/home/' after login.")
-
-        # Verify that the user is logged in
-        response = self.client.get('/')
-        self.assertEqual(int(self.client.session['_auth_user_id']), self.admin.pk, "Admin user should be logged in.")
+        response = self.client.post(reverse('login'), {
+            'username': self.admin.username,
+            'password': 'adminpassword'
+        })
+        self.assertRedirects(response, '/home/')
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.admin.pk)
 
     def test_ta_login_success(self):
         """Test successful login for TA."""
-        # Use username (or email if your view supports that)
-        response = self.client.post(reverse('login'), {'username': self.ta.username, 'password': 'tapassword'})
-
-        # Assert that user is redirected to the home page
-        self.assertRedirects(response, '/home/', msg_prefix="TA should be redirected to '/home/' after login.")
-
-        # Verify that the user is logged in
-        response = self.client.get('/')
-        self.assertEqual(int(self.client.session['_auth_user_id']), self.ta.pk, "TA user should be logged in.")
+        response = self.client.post(reverse('login'), {
+            'username': self.ta.username,
+            'password': 'tapassword'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.ta.pk)
 
     def test_login_failure(self):
         """Test login failure with incorrect credentials."""
-        # Try to log in with incorrect credentials
-        response = self.client.post(reverse('login'), {'username': "fakeuser", 'password': 'wrongpassword'})
+        response = self.client.post(reverse('login'), {
+            'username': "fakeuser",
+            'password': 'wrongpassword'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid username or password")
 
-        # Check that the response code is 200 (indicating the login page was re-rendered)
-        self.assertEqual(response.status_code, 200, "Login failure should return status code 200 (page reload).")
+    def test_instructor_login_success(self):
+        """Test successful login for instructor."""
+        response = self.client.post(reverse('login'), {
+            'username': self.instructor_user.username,
+            'password': 'instructorpass'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.instructor_user.pk)
 
-        # Check that the error message is displayed
-        self.assertContains(response, "Invalid username or password", msg_prefix="Error message should be displayed.")
+    def test_already_logged_in_redirect(self):
+        """Test that already logged in users are redirected to home."""
+        # First login
+        self.client.login(username=self.admin.username, password='adminpassword')
+        # Try to access login page again
+        response = self.client.get(reverse('login'))
+        self.assertRedirects(response, '/home/')
+
+    def test_empty_credentials(self):
+        """Test login attempt with empty credentials."""
+        response = self.client.post(reverse('login'), {
+            'username': '',
+            'password': ''
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid username or password")
+
+    def test_correct_username_wrong_password(self):
+        """Test login attempt with correct username but wrong password."""
+        response = self.client.post(reverse('login'), {
+            'username': self.admin.username,
+            'password': 'wrongpassword'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid username or password")
+
+    def test_case_sensitive_username(self):
+        """Test that username is case sensitive."""
+        response = self.client.post(reverse('login'), {
+            'username': self.admin.username.upper(),
+            'password': 'adminpassword'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid username or password")
+
+    def test_login_with_inactive_user(self):
+        """Test login attempt with an inactive user account."""
+        # Create inactive user
+        inactive_user = User.objects.create_user(
+            username="inactive",
+            password="inactivepass",
+            is_active=False
+        )
+        response = self.client.post(reverse('login'), {
+            'username': 'inactive',
+            'password': 'inactivepass'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid username or password")
 

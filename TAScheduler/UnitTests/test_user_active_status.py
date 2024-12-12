@@ -10,11 +10,13 @@ class UserModelTests(TestCase):
             password="password123",
             is_active=True
         )
+        self.assertTrue(user_active.is_active)
+
+    def test_user_inactive_status(self):
         user_inactive = User.objects.create(
             username="inactiveuser",
             email="inactive@example.com",
             password="password123",
             is_active=False
         )
-        self.assertTrue(user_active.is_active)
         self.assertFalse(user_inactive.is_active)
