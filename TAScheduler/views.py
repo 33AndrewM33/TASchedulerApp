@@ -335,6 +335,8 @@ def home_ta(request):
     })
 
 def forgot_password(request):
+   
+def forgot_password(request):
     error = None
     success_message = None  # Added to store the success message
     security_questions = {
@@ -346,11 +348,12 @@ def forgot_password(request):
     if request.method == "POST":
         # Handle temporary password request
         if "temp_password" in request.POST:
-            username = request.POST.get("username", "").strip()
-            email = request.POST.get("email", "").strip()
+            username = request.POST.get("temp_username", "").strip()
+            email = request.POST.get("temp_email", "").strip()
             try:
                 user = User.objects.get(username=username, email=email)
                 temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+
                 user.set_password(temp_password)
                 user.is_temporary_password = True
                 user.save()

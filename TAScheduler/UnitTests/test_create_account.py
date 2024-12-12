@@ -1,5 +1,6 @@
 from django.test import TestCase
-from TAScheduler.models import User, TA, Instructor, Administrator
+from TAScheduler.models import User, TA, Instructor, Administrator, Course, Section, Lecture
+
 
 class CreateAccountTestCase(TestCase):
     def setUp(self):

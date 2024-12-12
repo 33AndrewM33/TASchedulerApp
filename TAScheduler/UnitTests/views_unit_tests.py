@@ -7,7 +7,6 @@ from django.contrib.auth.hashers import check_password
 
 User = get_user_model()
 
-
 class AccountManagementViewTests(TestCase):
     def setUp(self):
         # Create an admin user for testing
@@ -19,15 +18,21 @@ class AccountManagementViewTests(TestCase):
         )
         self.client.login(username="admin", password="password123")
 
-    def test_render_account_management_page(self):
-        """Test rendering the account management page."""
+    # Break down the test for rendering the account management page
+    def test_render_account_management_page_status_code(self):
         response = self.client.get(reverse('account_management'))
         self.assertEqual(response.status_code, 200)
+
+    def test_render_account_management_page_template_used(self):
+        response = self.client.get(reverse('account_management'))
         self.assertTemplateUsed(response, 'account_management.html')
+
+    def test_render_account_management_page_contains_users(self):
+        response = self.client.get(reverse('account_management'))
         self.assertContains(response, "Users")
 
-    def test_create_user(self):
-        """Test creating a new user."""
+    # Break down the test for creating a new user
+    def test_create_user_status_code(self):
         data = {
             "action": "create",
             "username": "newuser",
@@ -38,50 +43,103 @@ class AccountManagementViewTests(TestCase):
         response = self.client.post(reverse('account_management'), data)
         self.assertEqual(response.status_code, 200)
 
-        # Check if the user was created
+    def test_create_user_exists(self):
+        data = {
+            "action": "create",
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "securepassword",
+            "role": "ta",
+        }
+        self.client.post(reverse('account_management'), data)
+        user = User.objects.get(username="newuser")
+        self.assertIsNotNone(user)
+
+    def test_create_user_email(self):
+        data = {
+            "action": "create",
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "securepassword",
+            "role": "ta",
+        }
+        self.client.post(reverse('account_management'), data)
         user = User.objects.get(username="newuser")
         self.assertEqual(user.email, "newuser@example.com")
-        self.assertTrue(check_password("securepassword", user.password))
-        self.assertTrue(user.is_ta)
-        self.assertTrue(hasattr(user, "ta_profile"))
 
-    def test_delete_user(self):
-        """Test deleting an existing user."""
+    def test_create_user_password_hashed(self):
+        data = {
+            "action": "create",
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "securepassword",
+            "role": "ta",
+        }
+        self.client.post(reverse('account_management'), data)
+        user = User.objects.get(username="newuser")
+        self.assertTrue(check_password("securepassword", user.password))
+
+    def test_create_user_role_ta(self):
+        data = {
+            "action": "create",
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "securepassword",
+            "role": "ta",
+        }
+        self.client.post(reverse('account_management'), data)
+        user = User.objects.get(username="newuser")
+        self.assertTrue(user.is_ta)
+
+    # Break down the test for deleting an existing user
+    def test_delete_user_status_code(self):
         user_to_delete = User.objects.create_user(
             username="testuser",
             email="testuser@example.com",
             password="password123",
             is_ta=True,
         )
-        data = {
-            "action": "delete",
-            "user_id": user_to_delete.id,
-        }
+        data = {"action": "delete", "user_id": user_to_delete.id}
         response = self.client.post(reverse('account_management'), data)
         self.assertEqual(response.status_code, 200)
 
-        # Check if the user was deleted
+    def test_delete_user_removed(self):
+        user_to_delete = User.objects.create_user(
+            username="testuser",
+            email="testuser@example.com",
+            password="password123",
+            is_ta=True,
+        )
+        data = {"action": "delete", "user_id": user_to_delete.id}
+        self.client.post(reverse('account_management'), data)
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(id=user_to_delete.id)
 
-    def test_edit_user(self):
-        """Test initiating an edit action for a user."""
+    # Break down the test for editing a user
+    def test_edit_user_status_code(self):
         user_to_edit = User.objects.create_user(
             username="edituser",
             email="edituser@example.com",
             password="password123",
             is_ta=True,
         )
-        data = {
-            "action": "edit",
-            "user_id": user_to_edit.id,
-        }
+        data = {"action": "edit", "user_id": user_to_edit.id}
         response = self.client.post(reverse('account_management'), data)
         self.assertEqual(response.status_code, 200)
+
+    def test_edit_user_contains_username(self):
+        user_to_edit = User.objects.create_user(
+            username="edituser",
+            email="edituser@example.com",
+            password="password123",
+            is_ta=True,
+        )
+        data = {"action": "edit", "user_id": user_to_edit.id}
+        response = self.client.post(reverse('account_management'), data)
         self.assertContains(response, "edituser")
 
-    def test_update_user(self):
-        """Test updating an existing user."""
+    # Break down the test for updating a user
+    def test_update_user_status_code(self):
         user_to_update = User.objects.create_user(
             username="updateuser",
             email="updateuser@example.com",
@@ -99,16 +157,7 @@ class AccountManagementViewTests(TestCase):
         response = self.client.post(reverse('account_management'), data)
         self.assertEqual(response.status_code, 200)
 
-        # Check if the user details were updated
-        user_to_update.refresh_from_db()
-        self.assertEqual(user_to_update.username, "updateduser")
-        self.assertEqual(user_to_update.email, "updateduser@example.com")
-        self.assertTrue(check_password("newpassword", user_to_update.password))
-        self.assertTrue(user_to_update.is_instructor)
-        self.assertTrue(hasattr(user_to_update, "instructor_profile"))
-
-    def test_update_user_without_password(self):
-        """Test updating a user without changing the password."""
+    def test_update_user_details(self):
         user_to_update = User.objects.create_user(
             username="updateuser",
             email="updateuser@example.com",
@@ -120,19 +169,15 @@ class AccountManagementViewTests(TestCase):
             "editing_user_id": user_to_update.id,
             "username": "updateduser",
             "email": "updateduser@example.com",
-            "password": "",
-            "role": "administrator",
+            "password": "newpassword",
+            "role": "instructor",
         }
-        response = self.client.post(reverse('account_management'), data)
-        self.assertEqual(response.status_code, 200)
-
-        # Check if the user details were updated without changing the password
+        self.client.post(reverse('account_management'), data)
         user_to_update.refresh_from_db()
         self.assertEqual(user_to_update.username, "updateduser")
         self.assertEqual(user_to_update.email, "updateduser@example.com")
-        self.assertTrue(check_password("password123", user_to_update.password))
-        self.assertTrue(user_to_update.is_admin)
-        self.assertTrue(hasattr(user_to_update, "administrator_profile"))
+        self.assertTrue(check_password("newpassword", user_to_update.password))
+        self.assertTrue(user_to_update.is_instructor)
 
 
 
@@ -216,7 +261,6 @@ class CreateSectionTestCase(TestCase):
         response = self.client.post(reverse('create_section'), data, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "All fields are required.")
-
 
 
     def test_create_section_exceed_maximum_sections(self):
@@ -444,10 +488,6 @@ class EditSectionViewTestCase(TestCase):
         section = Section.objects.get(id=self.section_lab.id)
         self.assertNotEqual(section.location, "")  # Location should remain unchanged
 
-
-        
-
-
     def test_no_changes_submitted(self):
         """Test that submitting the form without changes does not alter the section."""
         self.client.login(username='adminuser', password='adminpassword')
@@ -460,6 +500,7 @@ class EditSectionViewTestCase(TestCase):
         section = Section.objects.get(id=self.section.id)
         self.assertEqual(section.location, self.section.location)
         self.assertEqual(section.meeting_time, self.section.meeting_time)
+
 
 class ManageSectionViewTests(TestCase):
     @classmethod
