@@ -87,6 +87,40 @@ class ManageSectionViewTests(TestCase):
         response = self.client.get(reverse('manage_section'))
         self.assertContains(response, new_section.location)
 
+
+    def test_manage_section_view_post_create_section(self):
+        """Test if the view allows the creation of a new section."""
+        response = self.client.post(reverse('manage_section'), {
+            'section_id': 3,
+            'course': self.course.id,
+            'location': 'Room 103',
+            'meeting_time': 'Mon-Wed 12:00 PM - 1:30 PM'
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect after creation
+        new_section = Section.objects.get(section_id=3)
+        self.assertEqual(new_section.location, 'Room 103')
+
+
+    def test_manage_section_view_post_create_section_without_location(self):
+        """Test if the view handles form submission without location."""
+        response = self.client.post(reverse('manage_section'), {
+            'section_id': 3,
+            'course': self.course.id,
+            'meeting_time': 'Mon-Wed 12:00 PM - 1:30 PM'
+        })
+        self.assertFormError(response, 'form', 'location', 'This field is required.')
+
+
+    def test_manage_section_view_post_create_section_without_time(self):
+        """Test if the view handles form submission without meeting time."""
+        response = self.client.post(reverse('manage_section'), {
+            'section_id': 3,
+            'course': self.course.id,
+            'location': 'Room 103',
+        })
+        self.assertFormError(response, 'form', 'meeting_time', 'This field is required.')
+
+
     def test_manage_section_view_filter_by_modality(self):
         """Test if filtering by modality works."""
         self.course.modality = "Online"
@@ -210,3 +244,7 @@ class ManageSectionViewTests(TestCase):
         self.assertFormError(response, 'form', 'location', 'This field is required.')
         self.assertFormError(response, 'form', 'meeting_time', 'This field is required.')
 
+    def test_manage_section_view_get_edit_section_nonexistent(self):
+        """Test if the view properly handles trying to edit a nonexistent section."""
+        response = self.client.get(reverse('manage_section_edit', args=[999]))
+        self.assertEqual(response.status_code, 404)
