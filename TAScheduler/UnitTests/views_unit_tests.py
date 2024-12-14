@@ -263,7 +263,6 @@ class CreateSectionTestCase(TestCase):
         self.assertContains(response, "All fields are required.")
 
 
-
     def test_create_section_exceed_maximum_sections(self):
         """Test that creating sections beyond the course limit is disallowed"""
         # Create maximum allowed sections

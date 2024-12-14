@@ -11,9 +11,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=90)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    home_address = models.CharField(max_length=90, blank=True)  # Private information
-    phone_number = models.CharField(max_length=15, blank=True)  # Private information
-    is_temporary_password = models.BooleanField(default=False)  # New field to track temporary passwords
+    home_address = models.CharField(max_length=90, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True)
+    is_temporary_password = models.BooleanField(default=False)
 
     # Roles
     is_admin = models.BooleanField(default=False)
@@ -28,6 +28,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+    def save(self, *args, **kwargs):
+        # Automatically make superusers admins
+        if self.is_superuser:
+            self.is_admin = True
+        super().save(*args, **kwargs)
 
     def get_role(self):
         if self.is_admin:
