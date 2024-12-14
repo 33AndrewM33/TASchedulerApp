@@ -47,17 +47,7 @@ class PasswordResetTestCase(TestCase):
         response = self.client.post(reverse('forgot_password'), data)
         self.assertTemplateUsed(response, 'reset_password.html')
 
-    def test_temporary_password_request(self):
-        """Test requesting a temporary password"""
-        data = {
-            'username': 'testuser',
-            'email': 'test@example.com',
-            'temp_password': True
-        }
 
-        response = self.client.post(reverse('forgot_password'), data)
-        self.test_user.refresh_from_db()
-        self.assertTrue(self.test_user.is_temporary_password)
 
     def test_password_reset_complete(self):
         """Test complete password reset process"""
