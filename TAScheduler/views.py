@@ -3,7 +3,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.conf import settings  # Added
+
+import random
+import string
+
 from TAScheduler.models import Course, Section, Lab, Lecture, TA, Instructor, Administrator, User, Notification
+
 
 # ----------------------------------------
 # Section Management Views
@@ -53,6 +61,7 @@ def create_section(request):
             messages.error(request, f"An error occurred: {str(e)}")
     courses = Course.objects.all()
     return render(request, 'create_section.html', {"user": request.user, "courses": courses})
+
 @login_required
 def edit_section(request, section_id):
     section = get_object_or_404(Section, id=section_id)
@@ -88,6 +97,7 @@ def delete_section(request, section_id):
     except Exception as e:
         messages.error(request, f"Error deleting section: {str(e)}")
     return redirect('manage_section')
+
 
 # ----------------------------------------
 # Course Management Views
@@ -254,10 +264,16 @@ def custom_logout(request):
 def home(request):
     if request.user.is_admin:
         # Admin-specific home page
+        unread_notifications_count = Notification.objects.filter(
+            recipient=request.user, is_read=False
+        ).count()
+
         notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+
         return render(request, 'home_admin.html', {
             "user": request.user,
-            "notifications": notifications
+            "notifications": notifications,
+            "unread_notifications_count": unread_notifications_count  # Add count here
         })
     elif request.user.is_instructor:
         # Redirect to instructor home page
@@ -277,6 +293,7 @@ def clear_notifications(request):
         Notification.objects.filter(recipient=request.user).delete()
         messages.success(request, "All notifications cleared successfully.")
     return redirect('home')
+
 @login_required
 def home_instructor(request):
     return render(request, 'home_instructor.html', {
@@ -292,11 +309,22 @@ def clear_notifications(request):
         Notification.objects.filter(recipient=request.user).delete()
         messages.success(request, "All notifications cleared successfully.")
     return redirect('home')
+
 @login_required
 def home_instructor(request):
+    if not request.user.is_instructor:
+        return redirect('home')  # Redirect if the user is not an instructor
+
+    # Fetch notifications for the instructor
+    notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications_count = unread_notifications.count()
+
     return render(request, 'home_instructor.html', {
         "user": request.user,
-        "message": "Welcome to the Instructor Dashboard! Placeholder content here.",
+        "notifications": unread_notifications,
+        "unread_notifications_count": unread_notifications_count,
+        "message": "Welcome to the Instructor Dashboard!",
     })
 
 
@@ -309,13 +337,38 @@ def home_ta(request):
 
 def forgot_password(request):
     error = None
+    success_message = None  # Added to store the success message
     security_questions = {
         "question_1": "university of wisconsin milwaukee",
         "question_2": "rock",
         "question_3": "django",
     }
+
     if request.method == "POST":
-        if "username" in request.POST and "answer_1" in request.POST:
+        # Handle temporary password request
+        if "temp_password" in request.POST:
+            username = request.POST.get("temp_username", "")
+            email = request.POST.get("temp_email", "")
+            try:
+                print(username, email)
+                user = User.objects.get(username=username, email=email)
+                temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+                user.set_password(temp_password)
+                user.is_temporary_password = True
+                user.save()
+                success_message = "Temporary password sent to your email!"
+                send_mail(
+                    subject="Your Temporary Password",
+                    message=f"Your temporary password is: {temp_password}\nPlease change your password after logging in.",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                )
+
+            except(User.DoesNotExist):
+                error = "User not found or email does not match."
+
+        # Handle reset password via security questions
+        elif "username" in request.POST and "answer_1" in request.POST:
             username = request.POST.get("username", "").strip()
             answer_1 = request.POST.get("answer_1", "").strip().lower()
             answer_2 = request.POST.get("answer_2", "").strip().lower()
@@ -327,28 +380,45 @@ def forgot_password(request):
             ):
                 request.session['valid_user'] = username
                 return render(request, "reset_password.html")
+
             else:
                 error = "One or more answers were incorrect. Please try again."
-        elif "new_password" in request.POST and "confirm_password" in request.POST:
-            username = request.session.get('valid_user', None)
-            if username:
-                new_password = request.POST.get("new_password", "")
-                confirm_password = request.POST.get("confirm_password", "")
-                if new_password == confirm_password:
-                    try:
-                        user = User.objects.get(username=username)
-                        user.password = make_password(new_password)
-                        user.save()
 
-                        # Notify admins about the password change
-                        Notification.notify_admin_on_password_change(user)
+    # Handle actual password reset
+    if request.method == "POST" and "new_password" in request.POST:
+        username = request.session.get('valid_user')
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
 
-                        messages.success(request, "Password reset! Log in with your new password.")
-                        return redirect('/')
-                    except User.DoesNotExist:
-                        error = "User not found. Please start again."
-    return render(request, "forgot_password.html", {"error": error})
+        if username and new_password == confirm_password:
+            try:
+                user = User.objects.get(username=username)
+                user.set_password(new_password)
+                user.is_temporary_password = False  # Reset the flag
+                user.save()
+                del request.session['valid_user']  # Clear session after success
 
+                # Notify admins about the password reset
+                admins = User.objects.filter(is_admin=True)
+                for admin in admins:
+                    Notification.objects.create(
+                        sender=user,
+                        recipient=admin,
+                        subject="User Password Reset",
+                        message=f"The user {user.first_name} {user.last_name} ({user.email}) has successfully reset their password.",
+                    )
+
+                success_message = "Password reset successfully! Redirecting to login page..."
+                return render(request, "reset_password.html", {"success_message": success_message})
+            except User.DoesNotExist:
+                error = "User not found. Please start the process again."
+        else:
+            error = "Passwords do not match. Please try again."
+
+    return render(request, "forgot_password.html", {
+        "error": error,
+        "success_message": success_message,
+    })
 @login_required
 def edit_user(request, user_id):
     user_to_edit = get_object_or_404(User, id=user_id)
@@ -386,6 +456,30 @@ def edit_user(request, user_id):
     }
     return render(request, "edit_user.html", context)
 
+def send_temp_password(request):
+    if request.method == "POST":
+        username = request.POST.get("temp-username")
+        email = request.POST.get("temp-email")
+
+        user = User.objects.filter(username=username, email=email).first()
+        if user:
+            # Generate a temporary password
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            user.set_password(temp_password)
+            user.save()
+
+            # Send email
+            send_mail(
+                "Your Temporary Password",
+                f"Your temporary password is: {temp_password}\nPlease change your password after logging in.",
+                "no-reply@example.com",
+                [email],
+            )
+            return JsonResponse({"message": "Temporary password sent to your email!"}, status=200)
+        else:
+            return JsonResponse({"message": "User not found or email does not match."}, status=404)
+
+    return JsonResponse({"message": "Invalid request."}, status=400)
 
 @login_required
 def assign_instructor_to_course_account_dashboard(request, user_id):
@@ -412,22 +506,198 @@ def assign_instructors_to_course(request, course_id):
     # Get the course by ID
     course = get_object_or_404(Course, course_id=course_id)
 
-    # Fetch all instructors from the database
+    # Fetch all instructors and TAs from the database
     instructors = Instructor.objects.all()
+    tas = TA.objects.all()
 
     if request.method == "POST":
         # Get selected instructor IDs from the form
         selected_instructors = request.POST.getlist("instructors")
 
         # Assign instructors to the course
-        course.instructors.set(Instructor.objects.filter(id__in=selected_instructors))
+        new_instructors = Instructor.objects.filter(id__in=selected_instructors)
+        course.instructors.set(new_instructors)  # Update course instructors
         course.save()
 
-        messages.success(request, f"Instructors updated for course '{course.name}'.")
+        # Send notifications to the assigned instructors
+        for instructor in new_instructors:
+            Notification.objects.create(
+                sender=request.user,
+                recipient=instructor.user,
+                subject="Course Assignment Notification",
+                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
+            )
+
+        messages.success(request, f"Instructors updated for course '{course.name}'. Notifications sent to the assigned instructors.")
         return redirect("manage_course")
 
-    # Render the template with course and instructor data
+    # Render the template with course, instructor, and TA data
     return render(request, "assign_instructors.html", {
         "course": course,
         "instructors": instructors,
+        "tas": tas,
+    })
+
+@login_required
+def assign_tas_to_course(request, course_id):
+    # Get the course by ID
+    course = get_object_or_404(Course, course_id=course_id)
+
+    if request.method == "POST":
+        # Get selected TA IDs from the form
+        selected_tas = request.POST.getlist("tas")
+
+        # Assign TAs to the course
+        new_tas = TA.objects.filter(id__in=selected_tas)
+        course.tas.set(new_tas)  # Update course TAs
+        course.save()
+
+        # Send notifications to the assigned TAs
+        for ta in new_tas:
+            Notification.objects.create(
+                sender=request.user,
+                recipient=ta.user,
+                subject="Course Assignment Notification",
+                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
+            )
+
+        messages.success(request, f"TAs updated for course '{course.name}'. Notifications sent to the assigned TAs.")
+        return redirect("manage_course")
+
+    return redirect("assign_instructors_to_course", course_id=course_id)
+
+@login_required
+def edit_contact_info(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    if request.method == "POST":
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        home_address = request.POST.get('home_address')
+
+        # Update user fields
+        request.user.email = email
+        request.user.phone_number = phone_number
+        request.user.home_address = home_address
+        request.user.save()
+
+        messages.success(request, "Your contact information has been updated successfully.")
+        return redirect('edit_contact_info')
+
+    return render(request, 'edit_contact_info.html', {
+        'user': request.user,
+    })
+
+@login_required
+def view_courses(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    courses = request.user.instructor_profile.courses.all()
+
+    return render(request, 'view_courses.html', {
+        'user': request.user,
+        'courses': courses,
+    })
+
+
+@login_required
+def assign_ta_to_section(request):
+    if not (request.user.is_instructor or request.user.is_admin):
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Get sections based on user role
+    if request.user.is_admin:
+        sections = Section.objects.all()
+    else:
+        instructor = request.user.instructor_profile
+        sections = Section.objects.filter(course__instructors=instructor)
+
+    # Filter by section_id if provided in GET parameters
+    section_id = request.GET.get('section_id')
+    if section_id:
+        sections = sections.filter(id=section_id)
+
+    # Get all TAs
+    tas = TA.objects.all()
+
+    # Handle assignment
+    if request.method == "POST":
+        ta_id = request.POST.get('ta_id')
+        section_id = request.POST.get('section_id')
+
+        # Get the TA and Section
+        ta = get_object_or_404(TA, id=ta_id)
+        section = get_object_or_404(Section, id=section_id)
+
+        # Assign the TA to the section
+        section.assigned_tas.add(ta)
+        section.save()
+
+        # Create notification for the TA
+        Notification.objects.create(
+            sender=request.user,
+            recipient=ta.user,
+            subject="Section Assignment",
+            message=f"You have been assigned to section {section.section_id} for course {section.course.name}."
+        )
+
+        messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been assigned to Section {section.section_id}.")
+
+        # Redirect based on user role
+        if request.user.is_admin:
+            return redirect('manage_section')
+        return redirect('assign_ta_to_section')
+
+    return render(request, 'assign_ta_to_section.html', {
+        'tas': tas,
+        'sections': sections,
+        'is_admin': request.user.is_admin
+    })
+
+@login_required
+def unassign_ta(request, section_id, ta_id):
+    if not (request.user.is_instructor or request.user.is_admin):
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+        # Fetch the section and TA
+    section = get_object_or_404(Section, id=section_id)
+    ta = get_object_or_404(TA, id=ta_id)
+
+    # Remove the TA from the section's assigned TAs
+    section.assigned_tas.remove(ta)
+    section.save()
+
+    # Notify the TA
+    Notification.objects.create(
+        sender=request.user,
+        recipient=ta.user,
+        subject="Section Unassignment",
+        message=f"You have been unassigned from Section {section.section_id} of course {section.course.name}."
+    )
+
+    # Success message
+    messages.success(request,f"TA {ta.user.first_name} {ta.user.last_name} has been unassigned from Section {section.section_id}.")
+
+    # Redirect based on user role
+    if request.user.is_admin:
+        return redirect('manage_section')
+    return redirect('assign_ta_to_section')
+
+@login_required
+def view_public_users(request):
+    if not request.user.is_instructor:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Fetch all users' public information
+    users = User.objects.values('first_name', 'last_name', 'email', 'phone_number')
+
+    return render(request, 'view_public_users.html', {
+        'users': users,
     })

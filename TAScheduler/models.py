@@ -176,6 +176,7 @@ class Course(models.Model):
     modality = models.CharField(max_length=50, choices=[("Online", "Online"), ("In-person", "In-person")])
 
     instructors = models.ManyToManyField(Instructor, related_name="courses")
+    tas = models.ManyToManyField(TA, related_name="courses", blank=True)
 
 
     def __str__(self):

@@ -4,45 +4,55 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assign Instructors</title>
+    <title>Assign to Course</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="container">
         <!-- Page Title -->
-        <h1>Assign Instructors to Course: {{ course.name }}</h1>
+        <h1>Assign to Course: {{ course.name }}</h1>
 
         <!-- Back to Course Management Button -->
         <a href="{% url 'manage_course' %}" class="btn btn-back">Back to Course Management</a>
 
-        <!-- Debug Block -->
-        <h2>Debugging Output</h2>
-        {% if instructors %}
-            <p>Total Instructors: {{ instructors|length }}</p>
-            <ul>
-                {% for instructor in instructors %}
-                    <li>{{ instructor.user.first_name }} {{ instructor.user.last_name }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No instructors found.</p>
-        {% endif %}
-
+    
         <!-- Form to Assign Instructors -->
-        <form method="POST" class="filter-form">
-            {% csrf_token %}
-            <div class="filter-group">
-                <label for="instructors" class="form-label">Select Instructors:</label>
-                <select name="instructors" id="instructors" class="filter-dropdown" multiple>
-                    {% for instructor in instructors %}
-                        <option value="{{ instructor.id }}" {% if instructor in course.instructors.all %}selected{% endif %}>
-                            {{ instructor.user.first_name }} {{ instructor.user.last_name }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-create">Assign</button>
-            </div>
-        </form>
+        <div class="assignment-section">
+            <h2>Assign Instructors</h2>
+            <form method="POST" class="filter-form">
+                {% csrf_token %}
+                <div class="filter-group">
+                    <label for="instructors" class="form-label">Select Instructors:</label>
+                    <select name="instructors" id="instructors" class="filter-dropdown" multiple>
+                        {% for instructor in instructors %}
+                            <option value="{{ instructor.id }}" {% if instructor in course.instructors.all %}selected{% endif %}>
+                                {{ instructor.user.first_name }} {{ instructor.user.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-create">Assign Instructors</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Form to Assign TAs -->
+        <div class="assignment-section">
+            <h2>Assign Teaching Assistants</h2>
+            <form method="POST" action="{% url 'assign_tas_to_course' course.course_id %}" class="filter-form">
+                {% csrf_token %}
+                <div class="filter-group">
+                    <label for="tas" class="form-label">Select TAs:</label>
+                    <select name="tas" id="tas" class="filter-dropdown" multiple>
+                        {% for ta in tas %}
+                            <option value="{{ ta.id }}" {% if ta in course.tas.all %}selected{% endif %}>
+                                {{ ta.user.first_name }} {{ ta.user.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-create">Assign TAs</button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>
