@@ -32,6 +32,9 @@ urlpatterns = [
     path('home/managesection/create/', views.create_section, name='create_section'),
     path('home/managesection/edit/<int:section_id>/', views.edit_section, name='edit_section'),
     path('home/managesection/delete/<int:section_id>/', views.delete_section, name='delete_section'),
+    path('home/managesection/assign-ta/<int:section_id>/', views.assign_ta_to_section, name='assign_ta_to_section'),
+    path('unassign_ta/<int:section_id>/<int:ta_id>/', views.unassign_ta, name='unassign_ta'),
+
 
 
     # Account Management

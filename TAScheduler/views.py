@@ -605,7 +605,7 @@ def view_courses(request):
 
 
 @login_required
-def assign_ta_to_section(request):
+def assign_ta_to_section(request, section_id):
     if not (request.user.is_instructor or request.user.is_admin):
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
