@@ -329,10 +329,21 @@ def home_instructor(request):
 
 @login_required
 def home_ta(request):
+    if not request.user.is_ta:
+        return redirect('home')  # Redirect if the user is not a TA
+
+    # Fetch notifications for the TA
+    notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+    unread_notifications_count = notifications.count()
+
     return render(request, 'home_ta.html', {
         "user": request.user,
-        "message": "Welcome to the TA Dashboard! Placeholder content here.",
+        "notifications": notifications,
+        "unread_notifications_count": unread_notifications_count,
+        "message": "Welcome to the TA Dashboard! Manage your assigned sections and notifications here.",
     })
+
+
 
 def forgot_password(request):
     error = None
@@ -540,7 +551,7 @@ def assign_instructors_to_course(request, course_id):
 
 @login_required
 def edit_contact_info(request):
-    if not request.user.is_instructor:
+    if not (request.user.is_instructor or request.user.is_ta):
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
 
@@ -602,6 +613,14 @@ def assign_ta_to_section(request):
         section.assigned_tas.add(ta)
         section.save()
 
+        # Create a notification for the TA
+        Notification.objects.create(
+            sender=request.user,  # Instructor who assigned the TA
+            recipient=ta.user,    # TA receiving the notification
+            subject="Section Assignment Notification",
+            message=f"You have been assigned to Section {section.section_id} of Course '{section.course.name}'."
+        )
+
         messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been assigned to Section {section.section_id}.")
         return redirect('assign_ta_to_section')
 
@@ -609,6 +628,7 @@ def assign_ta_to_section(request):
         'tas': tas,
         'sections': sections,
     })
+
 
 @login_required
 def unassign_ta(request, section_id, ta_id):
@@ -668,3 +688,19 @@ def unassign_instructor(request, course_id, instructor_id):
     # Redirect back if not a POST request
     messages.error(request, "Invalid request method.")
     return redirect('manage_course')
+
+
+@login_required
+def view_assigned_sections(request):
+    if not request.user.is_ta:
+        messages.error(request, "You are not authorized to access this page.")
+        return redirect('home')
+
+    # Fetch sections assigned to the logged-in TA
+    ta_profile = request.user.ta_profile  # Ensure the TA profile exists
+    assigned_sections = ta_profile.assigned_sections.all()  # Use related_name from the Section model
+
+    return render(request, 'view_assigned_sections.html', {
+        'user': request.user,
+        'sections': assigned_sections,
+    })

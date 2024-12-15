@@ -10,11 +10,21 @@
 <body>
     <!-- Notification Panel -->
     <div class="notification-container" id="notificationContainer">
-        <button class="notification-button" id="notificationButton">NOTIFICATIONS</button>
+        <button class="notification-button" id="notificationButton">NOTIFICATIONS ({{ unread_notifications_count }})</button>
         <div class="notification-panel" id="notificationPanel">
             <h2>Notifications</h2>
             <ul>
-                <li>No notifications available (Placeholder).</li>
+                {% if notifications %}
+                    {% for notification in notifications %}
+                        <li>
+                            <strong>{{ notification.subject }}</strong>: {{ notification.message }}
+                            <br>
+                            <em>{{ notification.timestamp }}</em>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No notifications available.</li>
+                {% endif %}
             </ul>
             <button class="close-button" id="closeButton">CLOSE</button>
         </div>
@@ -24,6 +34,13 @@
         <header>
             <h1>{{ message }}</h1>
         </header>
+
+        <!-- Add "Edit Contact Information" button -->
+        <div class="button-group">
+            <a href="{% url 'edit_contact_info' %}" class="nav-button">Edit Contact Information</a>
+            <a href="{% url 'view_assigned_sections' %}" class="nav-button">View Assigned Sections</a>
+        </div>
+        
         <footer>
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}

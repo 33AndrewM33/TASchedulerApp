@@ -48,5 +48,7 @@ urlpatterns = [
     path('home/instructor/assign_ta_to_section/', views.assign_ta_to_section, name='assign_ta_to_section'),
     path('unassign_ta/<int:section_id>/<int:ta_id>/', views.unassign_ta, name='unassign_ta'),
     
-     path('course/<int:course_id>/instructor/<int:instructor_id>/unassign/', views.unassign_instructor, name='unassign_instructor'),
+    path('course/<int:course_id>/instructor/<int:instructor_id>/unassign/', views.unassign_instructor, name='unassign_instructor'),
+    path('home/ta/view_sections/', views.view_assigned_sections, name='view_assigned_sections'),
+
 ]
