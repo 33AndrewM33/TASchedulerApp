@@ -22,33 +22,41 @@
         {% endif %}
 
         <!-- Form to assign TA -->
-        <form method="POST" class="form-container">
+        <form method="POST" action="{% if selected_section_id %}{% url 'assign_ta_to_section_specific' selected_section_id %}{% else %}{% url 'assign_ta_to_section' %}{% endif %}">
             {% csrf_token %}
             <div class="form-group">
-                <label for="section">Select Section:</label>
-                <select name="section_id" id="section" class="form-control" required>
-                    <option value="" disabled selected>Select a Section</option>
-                    {% for section in sections %}
-                    <option value="{{ section.id }}">
-                        {{ section.course.name }} - Section {{ section.section_id }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="ta">Select TA:</label>
-                <select name="ta_id" id="ta" class="form-control" required>
-                    <option value="" disabled selected>Select a TA</option>
+                <label for="ta_id">Select TA:</label>
+                <select name="ta_id" id="ta_id" required>
                     {% for ta in tas %}
-                    <option value="{{ ta.id }}">{{ ta.user.first_name }} {{ ta.user.last_name }}</option>
+                        <option value="{{ ta.id }}">{{ ta.user.first_name }} {{ ta.user.last_name }}</option>
                     {% endfor %}
                 </select>
             </div>
+    
+            <div class="form-group">
+                <label for="section_id">Select Section:</label>
+                <select name="section_id" id="section_id" required {% if selected_section_id %}disabled{% endif %}>
+                    {% for section in sections %}
+                        <option value="{{ section.id }}" {% if selected_section_id == section.id %}selected{% endif %}>
+                            Section {{ section.section_id }} - {{ section.course.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if selected_section_id %}
+                <input type="hidden" name="section_id" value="{{ selected_section_id }}">
+                {% endif %}
+            </div>
+    
+            <button type="submit" class="submit-button">Assign TA</button>
+        </form>
 
             <div class="button-group">
                 <button type="submit" class="btn btn-assign">Assign</button>
-                <a href="{% url 'home_instructor' %}" class="btn btn-cancel">Cancel</a>
+                {% if is_admin %}
+                    <a href="{% url 'manage_section' %}" class="btn btn-cancel">Cancel</a>
+                {% else %}
+                    <a href="{% url 'home_instructor' %}" class="btn btn-cancel">Cancel</a>
+                {% endif %}
             </div>
         </form>
 
