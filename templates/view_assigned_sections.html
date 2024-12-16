@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assigned Sections</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Assigned Sections</h1>
+        {% if sections %}
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Section ID</th>
+                        <th>Course Name</th>
+                        <th>Location</th>
+                        <th>Meeting Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for section in sections %}
+                    <tr>
+                        <td>{{ section.section_id }}</td>
+                        <td>{{ section.course.name }}</td>
+                        <td>{{ section.location }}</td>
+                        <td>{{ section.meeting_time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No sections assigned to you.</p>
+        {% endif %}
+        <a href="{% url 'home_ta' %}" class="nav-button">Back to Dashboard</a>
+    </div>
+</body>
+</html>

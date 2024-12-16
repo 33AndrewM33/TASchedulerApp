@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Notification Panel -->
+    <div class="notification-container" id="notificationContainer">
+        <button class="notification-button" id="notificationButton">NOTIFICATIONS ({{ unread_notifications_count }})</button>
+        <div class="notification-panel" id="notificationPanel">
+            <h2>Notifications</h2>
+            <ul>
+                {% if notifications %}
+                    {% for notification in notifications %}
+                        <li>
+                            <strong>{{ notification.subject }}</strong>: {{ notification.message }}
+                            <br>
+                            <em>{{ notification.timestamp }}</em>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No notifications available.</li>
+                {% endif %}
+            </ul>
+            <button class="close-button" id="closeButton">CLOSE</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>{{ message }}</h1>
+        </header>
+
+        <!-- Add "Edit Contact Information" button -->
+        <div class="button-group">
+            <a href="{% url 'edit_contact_info' %}" class="nav-button">Edit Contact Information</a>
+            <a href="{% url 'view_assigned_sections' %}" class="nav-button">View Assigned Sections</a>
+        </div>
+        
+        <footer>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="logout-button" value="Logout">
+            </form>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const notificationButton = document.getElementById("notificationButton");
+        const notificationPanel = document.getElementById("notificationPanel");
+        const closeButton = document.getElementById("closeButton");
+
+        // Toggle the notification panel
+        notificationButton.addEventListener("click", () => {
+            notificationPanel.style.display = "block";
+        });
+
+        // Close the notification panel
+        closeButton.addEventListener("click", () => {
+            notificationPanel.style.display = "none";
+        });
+    </script>
+</body>
+</html>

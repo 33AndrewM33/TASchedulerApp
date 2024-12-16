@@ -1,0 +1,190 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body and Background */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ffffff, #0056b3, #350909);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 10px;
+}
+
+/* Main Container */
+.container {
+    max-width: 1200px;
+    width: 90%;
+    background-color: rgba(255, 255, 255, 0.1); /* Slight transparency */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Header */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 36px;
+    color: #f8f9fa;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Table Styling */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.user-table th, .user-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    color: #333;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.user-table th {
+    background-color: #007bff;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.user-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+
+/* Form Section */
+.filter-form {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.2); /* Transparent background */
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.filter-form .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+}
+
+.filter-dropdown, .search-bar {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+    background-color: #f9f9f9;
+    flex: 1;
+}
+
+.filter-dropdown:focus, .search-bar:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
+}
+
+.btn-filter {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-filter:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Buttons */
+a.btn, .btn {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+a.btn:hover, .btn:hover {
+    transform: scale(1.05);
+}
+
+.btn-create {
+    background-color: #000; /* Black button */
+    color: #fff;
+}
+
+.btn-create:hover {
+    background-color: #333; /* Darker black for hover */
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+/* Link Styling */
+a.btn-back {
+    color: #fff;
+    background-color: #007bff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+a.btn-back:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        width: 100%;
+    }
+
+    .user-table {
+        font-size: 12px;
+    }
+
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+

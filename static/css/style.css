@@ -1,0 +1,480 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body and Background */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298); /* Gradient background */
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Main Container */
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Header Styling */
+header h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.back-to-dashboard {
+    margin-top: 20px; /* Add space above the button */
+    display: inline-block; /* Ensure proper alignment */
+}
+
+/* Navigation Buttons */
+.nav-button {   
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+    background: linear-gradient(90deg, #581cda, #2575fc);
+    color: #fff;
+    text-transform: uppercase;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Logout Button */
+.logout-button {
+    margin-top: 20px;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #d7263d, #a01728);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background: linear-gradient(90deg, #ff4e50, #ff1c1c);
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Table Styling for Existing Users */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.user-table th, .user-table td {
+    padding: 12px 15px;
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.user-table th {
+    background: linear-gradient(90deg, #3b3b98, #0d47a1);
+    color: #fff;
+}
+
+.user-table td {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.user-table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.user-table tr:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Input Fields */
+form input, form select {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Buttons for Actions */
+.delete-btn, .edit-btn, .assign-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+/* Assign Button */
+.assign-btn {
+    background: linear-gradient(90deg, #17b978, #0c9463);
+}
+
+.assign-btn:hover {
+
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Delete Button */
+.delete-btn {
+    background: linear-gradient(90deg, #d7263d, #a01728);
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Edit Button */
+.edit-btn {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+}
+
+.edit-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+/* Create User Button */
+.create-user-btn {
+    background: linear-gradient(90deg, #2575fc, #1b3fb6);
+    padding: 12px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.create-user-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Button */
+.notification-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #581cda, #2575fc);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.notification-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Panel */
+.notification-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fade-in 0.5s ease;
+}
+
+.notification-panel h2 {
+    font-size: 18px;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.notification-panel ul li {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Buttons inside Notification */
+.close-button, .clear-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #fff;
+    border-radius: 5px;
+    margin: 5px;
+}
+.clear-button {
+    background: linear-gradient(90deg, #17b978, #0c9463);
+}
+.close-button {
+    background: linear-gradient(90deg, #ff4e50, #ff1c1c);
+}
+.save-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.save-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.create-button {
+    display: inline-block; /* Ensure it behaves like a button */
+    text-align: center;
+    background-color: #000; /* Black background */
+    color: #fff; /* White text */
+    font-weight: bold;
+    padding: 10px 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    text-decoration: none; /* Remove underline */
+    transition: all 0.3s ease;
+}
+
+.create-button:hover {
+    background-color: #333; /* Darker black for hover */
+    transform: scale(1.1);
+}
+
+.btn-assign {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-assign:hover {
+    background-color: #e0a800;
+
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Delete Button */
+.delete-btn {
+    background: linear-gradient(90deg, #d7263d, #a01728);
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Edit Button */
+.edit-btn {
+    background: linear-gradient(90deg, #ff9800, #f57c00);
+}
+
+.edit-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Create User Button */
+.create-user-btn {
+    background: linear-gradient(90deg, #2575fc, #1b3fb6);
+    padding: 12px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.create-user-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Button */
+.notification-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #581cda, #2575fc);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.notification-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification Panel */
+.notification-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fade-in 0.5s ease;
+}
+
+.notification-panel h2 {
+    font-size: 18px;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.notification-panel ul li {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Buttons inside Notification */
+.close-button, .clear-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #fff;
+    border-radius: 5px;
+    margin: 5px;
+}
+.clear-button {
+    background: linear-gradient(90deg, #17b978, #0c9463);
+}
+.close-button {
+    background: linear-gradient(90deg, #ff4e50, #ff1c1c);
+
+}
+/* Success Message */
+.success-message {
+    background-color: #4caf50;
+    color: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Error Message */
+.error-message {
+    background-color: #f44336;
+    color: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.notification-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background: #d7263d; /* Red for visibility */
+    border-radius: 50%;
+    padding: 5px 10px;
+    margin-left: 5px;
+}
+/* Add animation to the notification button */
+.animated-notification {
+    position: relative;
+    animation: pop-up 1.5s infinite ease-in-out; /* Add infinite animation */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@keyframes pop-up {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Optional - emphasize the notification count */
+.notification-count {
+    color: #fff;
+    background-color: red;
+    padding: 2px 5px;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 5px;
+    animation: blink 2s infinite; /* Add blinking effect */
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Management</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Course Management</h1>
+
+        <!-- Back to Home Button -->
+        <a href="{% url 'home' %}" class="btn btn-back">Back to Home</a>
+
+        <!-- Filter Form -->
+        <form method="GET" action="" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="search" placeholder="Search courses..." class="search-bar">
+                <select name="semester" class="filter-dropdown">
+                    <option value="">All Semesters</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                </select>
+                <select name="modality" class="filter-dropdown">
+                    <option value="">All Modalities</option>
+                    <option value="Online">Online</option>
+                    <option value="In-person">In-person</option>
+                </select>
+                <button type="submit" class="btn btn-filter">Filter</button>
+            </div>
+        </form>
+
+        <!-- Course Table -->
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Course ID</th>
+                    <th>Name</th>
+                    <th>Semester</th>
+                    <th>Modality</th>
+                    <th>Sections</th>
+                    <th>Instructors</th> <!-- New Column -->
+                    <th>TAs</th>
+                    <th>Actions</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td>{{ course.course_id }}</td>
+                    <td>{{ course.name }}</td>
+                    <td>{{ course.semester }}</td>
+                    <td>{{ course.modality }}</td>
+                    <td>{{ course.num_of_sections }}</td>
+                    <td>
+                        {% if course.instructors.exists %}
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for instructor in course.instructors.all %}
+                                    <li>{{ instructor.user.first_name }} {{ instructor.user.last_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            No instructors assigned
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if course.tas.exists %}
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for ta in course.tas.all %}
+                                    <li>{{ ta.user.first_name }} {{ ta.user.last_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            No TAs assigned
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'edit_course' course.course_id %}" class="btn btn-edit">Edit</a>
+                        <a href="{% url 'delete_course' course.course_id %}" onclick="return confirm('Are you sure?')" class="btn btn-delete">Delete</a>
+                        <a href="{% url 'assign_instructors_to_course' course.course_id %}" class="btn btn-edit">Assign</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">No courses found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Create New Course Button -->
+        <a href="{% url 'create_course' %}" class="btn btn-create highlighted-button">Create New Course</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Assign TA to Lab</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Assign TA to Lab {{ lab.section }}</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <label for="ta_id">Select TA:</label>
+            <select name="ta_id" id="ta_id">
+                {% for ta in tas %}
+                <option value="{{ ta.id }}">{{ ta.user.first_name }} {{ ta.user.last_name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-submit">Assign</button>
+        </form>
+    </div>
+</body>
+</html>

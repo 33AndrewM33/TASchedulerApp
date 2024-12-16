@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Role</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Assign User Role - Upcoming Sprint</h1>
+        <p>This feature is planned for the next sprint. The assign functionality will help assign users to specific roles based on your requirements.</p>
+
+        <p>Details for the user:</p>
+        <ul>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+            <li>Role: {{ user.get_role }}</li>
+        </ul>
+
+        <a href="{% url 'account_management' %}" class="back-link">Back to Account Management</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="notification-container" id="notificationContainer">
+        <!-- Notification button with count and animation -->
+        <button class="notification-button animated-notification" id="notificationButton">
+            NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
+        </button>
+        <div class="notification-panel" id="notificationPanel">
+            <h2>Notifications</h2>
+            <ul>
+                {% for notification in notifications %}
+                    <li>
+                        <strong>{{ notification.subject }}</strong>
+                        <p>{{ notification.message }}</p>
+                        <small>{{ notification.timestamp }}</small>
+                    </li>
+                {% empty %}
+                    <li>No new notifications.</li>
+                {% endfor %}
+            </ul>
+            <div class="notification-actions">
+                <button class="close-button" id="closeButton">CLOSE</button>
+                <form method="POST" action="{% url 'clear_notifications' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="clear-button">CLEAR ALL</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Welcome, admin!</h1>
+        </header>
+
+        <nav class="navigation">
+            <a class="nav-button" href="{% url 'account_management' %}">Account Management</a>
+            <a class="nav-button" href="{% url 'manage_course' %}">Course Management</a>
+            <a class="nav-button" href="{% url 'manage_section' %}">Section Management</a>
+        </nav>
+
+        <footer>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="logout-button" value="Logout">
+            </form>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const notificationButton = document.getElementById("notificationButton");
+        const notificationPanel = document.getElementById("notificationPanel");
+        const closeButton = document.getElementById("closeButton");
+
+        // Toggle the notification panel
+        notificationButton.addEventListener("click", () => {
+            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
+
+            // Add a bounce effect when opening
+            if (notificationPanel.style.display === "block") {
+                notificationButton.classList.add("bounce");
+                setTimeout(() => {
+                    notificationButton.classList.remove("bounce");
+                }, 500); // Reset bounce after animation
+            }
+        });
+
+        // Close the notification panel
+        closeButton.addEventListener("click", () => {
+            notificationPanel.style.display = "none";
+        });
+    </script>
+</body>
+</html>
