@@ -485,7 +485,7 @@ def send_temp_password(request):
                 "no-reply@example.com",
                 [email],
             )
-            return JsonResponse({"message": "Temporary password sent to your email!"}, status=200)
+            return JsonResponse({"message": "Temporary password sent to your email please check your spams!"}, status=200)
         else:
             return JsonResponse({"message": "User not found or email does not match."}, status=404)
 
