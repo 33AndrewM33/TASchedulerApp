@@ -480,5 +480,7 @@ class DeleteSectionViewTestCase(TestCase):
 
     def test_success_message_on_delete(self):
         self.client.login(username=self.admin_user.username, password="adminpass")
-        response = self.client.post(reverse('delete_section', args=[self.section.id]), follow=True)
-        self.assertContains(response, f"Section {self.section.section_id} deleted successfully.")
+        response = self.client.post(reverse('delete_section', args=[self.section.id]))
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), f"Section {self.section.section_id} deleted successfully.")

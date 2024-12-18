@@ -516,8 +516,9 @@ def assign_instructors_to_course(request, course_id):
     # Get the course by ID
     course = get_object_or_404(Course, course_id=course_id)
 
-    # Fetch all instructors from the database
+    # Fetch all instructors and TAs from the database
     instructors = Instructor.objects.all()
+    tas = TA.objects.all()
 
     if request.method == "POST":
         # Get selected instructor IDs from the form
@@ -531,22 +532,49 @@ def assign_instructors_to_course(request, course_id):
         # Send notifications to the assigned instructors
         for instructor in new_instructors:
             Notification.objects.create(
-                sender=request.user,  # The user assigning the instructors
-                recipient=instructor.user,  # The instructor receiving the notification
+                sender=request.user,
+                recipient=instructor.user,
                 subject="Course Assignment Notification",
                 message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
             )
 
-        # Add a success message
         messages.success(request, f"Instructors updated for course '{course.name}'. Notifications sent to the assigned instructors.")
         return redirect("manage_course")
 
-    # Render the template with course and instructor data
+    # Render the template with course, instructor, and TA data
     return render(request, "assign_instructors.html", {
         "course": course,
         "instructors": instructors,
+        "tas": tas,
     })
 
+@login_required
+def assign_tas_to_course(request, course_id):
+    # Get the course by ID
+    course = get_object_or_404(Course, course_id=course_id)
+
+    if request.method == "POST":
+        # Get selected TA IDs from the form
+        selected_tas = request.POST.getlist("tas")
+
+        # Assign TAs to the course
+        new_tas = TA.objects.filter(id__in=selected_tas)
+        course.tas.set(new_tas)  # Update course TAs
+        course.save()
+
+        # Send notifications to the assigned TAs
+        for ta in new_tas:
+            Notification.objects.create(
+                sender=request.user,
+                recipient=ta.user,
+                subject="Course Assignment Notification",
+                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
+            )
+
+        messages.success(request, f"TAs updated for course '{course.name}'. Notifications sent to the assigned TAs.")
+        return redirect("manage_course")
+
+    return redirect("assign_instructors_to_course", course_id=course_id)
 
 
 @login_required
@@ -588,14 +616,22 @@ def view_courses(request):
 
 
 @login_required
-def assign_ta_to_section(request):
-    if not request.user.is_instructor:
+def assign_ta_to_section(request, section_id=None):
+    if not (request.user.is_instructor or request.user.is_admin):
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
 
-    # Get sections taught by the instructor
-    instructor = request.user.instructor_profile
-    sections = Section.objects.filter(course__instructors=instructor)
+    # Get sections based on user role
+    if request.user.is_admin:
+        sections = Section.objects.all()
+    else:
+        instructor = request.user.instructor_profile
+        sections = Section.objects.filter(course__instructors=instructor)
+
+    # Filter by section_id if provided in GET parameters
+    section_id = request.GET.get('section_id')
+    if section_id:
+        sections = sections.filter(id=section_id)
 
     # Get all TAs
     tas = TA.objects.all()
@@ -613,31 +649,36 @@ def assign_ta_to_section(request):
         section.assigned_tas.add(ta)
         section.save()
 
-        # Create a notification for the TA
+        # Create notification for the TA
         Notification.objects.create(
-            sender=request.user,  # Instructor who assigned the TA
-            recipient=ta.user,    # TA receiving the notification
-            subject="Section Assignment Notification",
-            message=f"You have been assigned to Section {section.section_id} of Course '{section.course.name}'."
+            sender=request.user,
+            recipient=ta.user,
+            subject="Section Assignment",
+            message=f"You have been assigned to section {section.section_id} for course {section.course.name}."
         )
 
         messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been assigned to Section {section.section_id}.")
+
+        # Redirect based on user role
+        if request.user.is_admin:
+            return redirect('assign_ta_to_section_admin', section_id=section_id)
         return redirect('assign_ta_to_section')
 
     return render(request, 'assign_ta_to_section.html', {
         'tas': tas,
         'sections': sections,
+        'is_admin': request.user.is_admin,
+        'selected_section_id': section_id
     })
 
 
 @login_required
 def unassign_ta(request, section_id, ta_id):
-    # Check if the user is an instructor
-    if not request.user.is_instructor:
+    if not (request.user.is_instructor or request.user.is_admin):
         messages.error(request, "You are not authorized to access this page.")
         return redirect('home')
 
-    # Fetch the section and TA
+        # Fetch the section and TA
     section = get_object_or_404(Section, id=section_id)
     ta = get_object_or_404(TA, id=ta_id)
 
@@ -645,8 +686,20 @@ def unassign_ta(request, section_id, ta_id):
     section.assigned_tas.remove(ta)
     section.save()
 
-    # Notify the instructor
-    messages.success(request, f"TA {ta.user.first_name} {ta.user.last_name} has been unassigned from Section {section.section_id}.")
+    # Notify the TA
+    Notification.objects.create(
+        sender=request.user,
+        recipient=ta.user,
+        subject="Section Unassignment",
+        message=f"You have been unassigned from Section {section.section_id} of course {section.course.name}."
+    )
+
+    # Success message
+    messages.success(request,f"TA {ta.user.first_name} {ta.user.last_name} has been unassigned from Section {section.section_id}.")
+
+    # Redirect based on user role
+    if request.user.is_admin:
+        return redirect('assign_ta_to_section_admin', section_id=section_id)
     return redirect('assign_ta_to_section')
 
 @login_required
