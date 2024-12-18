@@ -8,7 +8,6 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
-
     <div class="container">
         <h1>Account Management</h1>
         <ul class="messages">
@@ -17,100 +16,99 @@
             {% endfor %}
         </ul>
         
-        <div>
-            <!-- User Table -->
-            <h2>Existing Users</h2>
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if users %}
-                        {% for user in users %}
+        <div style="display: flex; width: 100%; gap: 20px;">
+            <!-- User Table Section -->
+            <div style="flex: 2;">
+                <h2>Existing Users</h2>
+                <table class="user-table">
+                    <thead>
                         <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.get_role }}</td>
-                            <td>
-                                <form method="POST" action="" style="display: inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                                    <button type="submit" name="action" value="delete" class="delete-btn">Delete</button>
-                                </form>
-                                <form method="GET" action="{% url 'edit_user' user.id %}" style="display: inline;">
-                                    <button type="submit" class="edit-btn">Edit</button>
-                                </form>
-
-                                {% if user.is_ta or user.is_instructor %}
-                                <!-- Assign to Course -->
-                                    <form method="POST" action="
-                                        {% if user.is_instructor %}
-                                            {% url 'assign_instructor_to_course' user.id %}
-                                        {% else %}
-                                            {% url 'assign_ta_to_course' user.id %}
-                                        {% endif %}" 
-                                        style="display: inline;">
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.get_role }}</td>
+                                <td>
+                                    <form method="POST" action="" style="display: inline;">
                                         {% csrf_token %}
-                                        <select name="course_id" required>
-                                            <option value="">Select Course</option>
-                                            {% for course in courses %}
-                                                <option value="{{ course.id }}">{{ course.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="submit" class="assign-btn">Assign</button>
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" name="action" value="delete" class="delete-btn">Delete</button>
                                     </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="4">No users available.</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                                    <form method="GET" action="{% url 'edit_user' user.id %}" style="display: inline;">
+                                        <button type="submit" class="edit-btn">Edit</button>
+                                    </form>
+
+                                    {% if user.is_ta or user.is_instructor %}
+                                        <form method="POST" action="
+                                            {% if user.is_instructor %}
+                                                {% url 'assign_instructor_to_course' user.id %}
+                                            {% else %}
+                                                {% url 'assign_ta_to_course' user.id %}
+                                            {% endif %}" 
+                                            style="display: inline;">
+                                            {% csrf_token %}
+                                            <select name="course_id" required>
+                                                <option value="">Select Course</option>
+                                                {% for course in courses %}
+                                                    <option value="{{ course.id }}">{{ course.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="assign-btn">Assign</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4">No users available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Create User Form Section -->
+            <div style="flex: 1;">
+                <h2>Create New User</h2>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" required><br>
+
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" required><br>
+
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required><br>
+
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required><br>
+
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required><br>
+
+                    <label for="role">Role:</label>
+                    <select id="role" name="role" required>
+                        <option value="instructor">Instructor</option>
+                        <option value="ta">TA</option>
+                        <option value="administrator">Administrator</option>
+                    </select><br>
+
+                    <button type="submit" name="action" value="create" class="btn-create">Create User</button>
+                </form>
+            </div>
         </div>
 
-        <div>
-            <!-- Create User Form -->
-            <h2>Create New User</h2>
-            <form method="POST" action="">
-                {% csrf_token %}
-                <label for="first_name">First Name:</label>
-                <input type="text" id="first_name" name="first_name" required><br>
-
-                <label for="last_name">Last Name:</label>
-                <input type="text" id="last_name" name="last_name" required><br>
-
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required><br>
-
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required><br>
-
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br>
-
-                <label for="role">Role:</label>
-                <select id="role" name="role" required>
-                    <option value="instructor">Instructor</option>
-                    <option value="ta">TA</option>
-                    <option value="administrator">Administrator</option>
-                </select><br>
-
-                <button type="submit" name="action" value="create" class="btn-create">Create User</button>
-            </form>
-        </div>
-
-        <div>
-            <a href="/home/" class="btn-back">Back to Home</a>
-        </div>
+        <a href="/home/" class="btn-back">Back to Home</a>
     </div>
 </body>
 </html>
