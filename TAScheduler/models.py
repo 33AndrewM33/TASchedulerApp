@@ -148,8 +148,8 @@ class Administrator(models.Model):
 # Teaching Assistant Model
 # ----------------------------------------
 class TA(models.Model):
+    # Removed: sections = models.ManyToManyField('Section', related_name="tas")
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="ta_profile")
-    sections = models.ManyToManyField('Section', related_name="tas")  # Change this to a unique related_name
     grader_status = models.BooleanField(default=False)  # Grader status
     skills = models.TextField(null=True, blank=True, default="No skills listed")
     max_assignments = models.IntegerField(
@@ -198,7 +198,7 @@ class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
     location = models.CharField(max_length=30)
     meeting_time = models.TextField()
-    assigned_tas = models.ManyToManyField(TA, related_name="assigned_sections")  # Change this to a unique related_name
+    assigned_tas = models.ManyToManyField(TA, related_name="assigned_sections", blank=True)  # Change this to a unique related_name
 
     def __str__(self):
         return f"Section {self.section_id} - {self.course}"
