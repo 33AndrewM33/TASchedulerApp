@@ -1,0 +1,222 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298); /* Blue gradient */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Floating Background Shapes */
+.floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    animation: floatShape 10s infinite ease-in-out;
+    pointer-events: none; /* Prevent interaction */
+}
+
+.floating-shape:nth-child(1) {
+    width: 100px;
+    height: 100px;
+    top: 10%;
+    left: 20%;
+    animation-duration: 12s;
+}
+
+.floating-shape:nth-child(2) {
+    width: 150px;
+    height: 150px;
+    bottom: 15%;
+    right: 10%;
+    animation-duration: 14s;
+}
+
+.floating-shape:nth-child(3) {
+    width: 80px;
+    height: 80px;
+    top: 60%;
+    left: 40%;
+    animation-duration: 10s;
+}
+
+.floating-shape:nth-child(4) {
+    width: 200px;
+    height: 200px;
+    bottom: 5%;
+    left: 10%;
+    animation-duration: 15s;
+}
+
+/* Grid Effect */
+.grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: 100px 100px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    animation: gridMove 10s linear infinite;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes floatShape {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes gridMove {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: -100px -100px;
+    }
+}
+
+/* Container Styling */
+.container {
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+    width: 350px;
+    text-align: center;
+}
+
+/* Title Styling */
+.image h2 {
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Form Group Styling */
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+label {
+    font-weight: bold;
+    color: #fff;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
+    font-size: 14px;
+    transition: box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    box-shadow: 0px 0px 8px rgba(37, 117, 252, 0.5);
+}
+
+/* Forgot Password Link */
+.forgot-password-link {
+    display: block;
+    margin: 10px 0;
+    color: #f8d7da;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.forgot-password-link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Login Button */
+.login-btn {
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 10px;
+}
+
+.login-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 4px 12px rgba(37, 117, 252, 0.5);
+}
+
+/* Error Message */
+.error {
+    color: #ff4e50;
+    background-color: rgba(255, 78, 80, 0.2);
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+}
+/* TA Scheduling App Title */
+.ta-title {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3rem;
+    color: #fff;
+    text-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    animation: heartbeat 2s infinite ease-in-out;
+    z-index: 10;
+}
+
+/* Heartbeat Animation */
+@keyframes heartbeat {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 1);
+    }
+}
