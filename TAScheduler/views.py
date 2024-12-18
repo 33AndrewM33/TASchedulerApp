@@ -506,75 +506,46 @@ def assign_instructor_to_course_account_dashboard(request, user_id):
         course.instructors.add(instructor.instructor_profile)
         course.save()
 
+        # Create notification for the instructor
+        Notification.objects.create(
+            sender=request.user,
+            recipient=instructor,
+            subject="Course Assignment",
+            message=f"You have been assigned to the course {course.name} ({course.course_id})."
+        )
+
         messages.success(request, f"Instructor {instructor.first_name} {instructor.last_name} assigned to course {course.name}.")
         return redirect("account_management")
     return redirect("account_management")
 
-@login_required
-def assign_instructors_to_course(request, course_id):
-    # Get the course by ID
-    course = get_object_or_404(Course, course_id=course_id)
-
-    # Fetch all instructors and TAs from the database
-    instructors = Instructor.objects.all()
-    tas = TA.objects.all()
-
-    if request.method == "POST":
-        # Get selected instructor IDs from the form
-        selected_instructors = request.POST.getlist("instructors")
-
-        # Assign instructors to the course
-        new_instructors = Instructor.objects.filter(id__in=selected_instructors)
-        course.instructors.set(new_instructors)  # Update course instructors
-        course.save()
-
-        # Send notifications to the assigned instructors
-        for instructor in new_instructors:
-            Notification.objects.create(
-                sender=request.user,
-                recipient=instructor.user,
-                subject="Course Assignment Notification",
-                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
-            )
-
-        messages.success(request, f"Instructors updated for course '{course.name}'. Notifications sent to the assigned instructors.")
-        return redirect("manage_course")
-
-    # Render the template with course, instructor, and TA data
-    return render(request, "assign_instructors.html", {
-        "course": course,
-        "instructors": instructors,
-        "tas": tas,
-    })
 
 @login_required
-def assign_tas_to_course(request, course_id):
-    # Get the course by ID
-    course = get_object_or_404(Course, course_id=course_id)
+def assign_ta_to_course_account_dashboard(request, user_id):
+    ta = get_object_or_404(User, id=user_id, is_ta=True)
 
     if request.method == "POST":
-        # Get selected TA IDs from the form
-        selected_tas = request.POST.getlist("tas")
+        course_id = request.POST.get("course_id")
+        if not course_id:
+            messages.error(request, "Please select a course.")
+            return redirect("account_management")
 
-        # Assign TAs to the course
-        new_tas = TA.objects.filter(id__in=selected_tas)
-        course.tas.set(new_tas)  # Update course TAs
+        course = get_object_or_404(Course, id=course_id)
+
+        # Assign the TA to the course
+        course.tas.add(ta.ta_profile)
         course.save()
 
-        # Send notifications to the assigned TAs
-        for ta in new_tas:
-            Notification.objects.create(
-                sender=request.user,
-                recipient=ta.user,
-                subject="Course Assignment Notification",
-                message=f"You have been assigned to the course '{course.name}' ({course.course_id})."
-            )
+        # Create notification for the TA
+        Notification.objects.create(
+            sender=request.user,
+            recipient=ta,
+            subject="Course Assignment",
+            message=f"You have been assigned to the course {course.name} ({course.course_id})."
+        )
 
-        messages.success(request, f"TAs updated for course '{course.name}'. Notifications sent to the assigned TAs.")
-        return redirect("manage_course")
-
-    return redirect("assign_instructors_to_course", course_id=course_id)
-
+        messages.success(request, f"TA {ta.first_name} {ta.last_name} assigned to course {course.name}.")
+        return redirect("account_management")
+    return redirect("account_management")
 
 @login_required
 def edit_contact_info(request):

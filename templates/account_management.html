@@ -47,8 +47,14 @@
                                 </form>
 
                                 {% if user.is_ta or user.is_instructor %}
-                                    <!-- Assign to Course -->
-                                    <form method="POST" action="{% url 'assign_instructor_to_course' user.id %}" style="display: inline;">
+                                <!-- Assign to Course -->
+                                    <form method="POST" action="
+                                        {% if user.is_instructor %}
+                                            {% url 'assign_instructor_to_course' user.id %}
+                                        {% else %}
+                                            {% url 'assign_ta_to_course' user.id %}
+                                        {% endif %}" 
+                                        style="display: inline;">
                                         {% csrf_token %}
                                         <select name="course_id" required>
                                             <option value="">Select Course</option>

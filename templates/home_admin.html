@@ -10,7 +10,7 @@
 <body>
     <div class="notification-container" id="notificationContainer">
         <!-- Notification button with count and animation -->
-        <button class="notification-button animated-notification" id="notificationButton">
+        <button class="notification-button" id="notificationButton">
             NOTIFICATIONS <span class="notification-count">({{ unread_notifications_count }})</span>
         </button>
         <div class="notification-panel" id="notificationPanel">
@@ -63,15 +63,8 @@
 
         // Toggle the notification panel
         notificationButton.addEventListener("click", () => {
-            notificationPanel.style.display = notificationPanel.style.display === "block" ? "none" : "block";
-
-            // Add a bounce effect when opening
-            if (notificationPanel.style.display === "block") {
-                notificationButton.classList.add("bounce");
-                setTimeout(() => {
-                    notificationButton.classList.remove("bounce");
-                }, 500); // Reset bounce after animation
-            }
+            notificationPanel.style.display = 
+                notificationPanel.style.display === "block" ? "none" : "block";
         });
 
         // Close the notification panel
