@@ -190,12 +190,9 @@ def account_management(request):
                 new_user = User.objects.create(
                     username=username,
                     email=email,
-
                     password=make_password(password),
                     first_name=first_name,  # Assigning first name
                     last_name=last_name,    # Assigning last name
-
-
                 )
                 if role == "ta":
                     new_user.is_ta = True
@@ -226,8 +223,10 @@ def account_management(request):
                 messages.success(request, f"User '{user_to_delete.username}' deleted successfully.")
             except Exception as e:
                 messages.error(request, f"Error deleting user: {str(e)}")
+
     users = User.objects.all()
     courses = Course.objects.all()  # Fetch all courses for assignment dropdown
+
     return render(request, "account_management.html", {
         "users": users,
         "courses": courses,
